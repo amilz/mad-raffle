@@ -9,6 +9,3 @@ pub use initialize_tracker::*;
 
 pub mod end_raffle;
 pub use end_raffle::*;
-
-pub mod thread;
-pub use thread::*;
