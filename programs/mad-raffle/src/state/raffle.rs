@@ -1,9 +1,28 @@
 use anchor_lang::prelude::*;
+use crate::{id::ID, constants::RAFFLE_SEED};
 
 #[account]
 pub struct RaffleTracker {
     pub current_raffle: u64,
     pub bump: u8,
+}
+
+use solana_program::pubkey::Pubkey;
+
+impl RaffleTracker {
+    pub fn next_raffle_pda(&self) -> (Pubkey, u8) {
+        let (next_raffle_pda, next_raffle_bump) = Pubkey::find_program_address(
+            &[
+                RAFFLE_SEED.as_ref(),
+                &(self.current_raffle + 1 as u64).to_le_bytes(),
+            ],
+            &ID,
+        );
+        (next_raffle_pda, next_raffle_bump)
+    }
+    pub fn increment(&mut self) {
+        self.current_raffle += 1;
+    }
 }
 
 #[account]
@@ -26,14 +45,18 @@ pub struct TicketHolder {
 impl Raffle {
     pub fn get_space(ticket_holder_count: usize) -> usize {
         8 + // discriminator
-        1 + // version
-        8 + // bump
         8 + // id
+        1 + // version
+        1 + // bump
         1 + // active
         4 + // vec minimium 
         (TicketHolder::get_space() * (ticket_holder_count)) + // tickets
         8 + // start time
         8 // end time
+    }
+    pub fn end_raffle(&mut self) {
+        self.active = false;
+        self.end_time = Clock::get().unwrap().unix_timestamp;
     }
 }
 
