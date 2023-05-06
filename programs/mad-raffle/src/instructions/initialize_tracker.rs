@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 
 use crate::constants::TRACKER_SEED;
 use crate::state::RaffleTracker;
@@ -10,6 +10,7 @@ pub struct InitializeTracker<'info> {
     pub tracker: Account<'info, RaffleTracker>,
     #[account(mut)]
     pub authority: Signer<'info>, // TODO Add constraint
+    #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
 }
 

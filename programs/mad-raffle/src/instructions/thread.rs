@@ -1,11 +1,11 @@
-use anchor_lang::{prelude::*, InstructionData};
+use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
-    instruction::Instruction, native_token::LAMPORTS_PER_SOL, system_program,
+    native_token::LAMPORTS_PER_SOL, system_program,
 };
-use clockwork_sdk::state::{Thread, ThreadResponse};
+use clockwork_sdk::state::{Thread, ThreadResponse, Trigger};
 use clockwork_sdk::utils::PAYER_PUBKEY;
 
-use crate::constants::{RAFFLE_SEED, TRACKER_SEED, THREAD_AUTHORITY_SEED, RAFFLE_VERSION};
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED, THREAD_AUTHORITY_SEED};
 use crate::id::ID;
 use crate::state::{RaffleTracker, Raffle};
 
@@ -59,48 +59,24 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     let thread = &mut ctx.accounts.thread;
     let thread_authority = &mut ctx.accounts.thread_authority;
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
-    let system_program = &ctx.accounts.system_program;
-    let clockwork_program = &ctx.accounts.clockwork_program;
-    let new_raffle = &mut ctx.accounts.new_raffle;
-    let payer = &ctx.accounts.payer;
-    
+    let new_raffle = &mut ctx.accounts.new_raffle;    
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
-    msg!("next_raffle_pda: {}", next_raffle_pda);
-
-    msg!("Thread: {}", thread.key());
-    msg!("Thread Authority: {}", thread_authority.key());
-    msg!("Tracker: {}", tracker.key());
-    msg!("System Program: {}", system_program.key());
-    msg!("Clockwork Program: {}", clockwork_program.key());
-    msg!("New Raffle: {}", new_raffle.key());
-    msg!("Payer: {}", payer.key());
 
     // 1 - CREATE THE NEW RAFFLE
-    new_raffle.set_inner(Raffle {
-        id: tracker.current_raffle,
-        active: true,
-        start_time: Clock::get().unwrap().unix_timestamp,
-        tickets: Vec::new(),
-        end_time: 0,
-        version: RAFFLE_VERSION,
-        bump: *ctx.bumps.get("new_raffle").unwrap()
-    });
+    new_raffle.initialize(
+        tracker.current_raffle,
+        *ctx.bumps.get("new_raffle").unwrap(),
+    );
 
     // 2 - UPDATE THE DYNAMIC CLOCKWORK THREAD
-    let new_raffle_ix = Instruction {
-        program_id: ID,
-        accounts: crate::accounts::NextRaffle {
-            new_raffle: next_raffle_pda.key(),
-            tracker: tracker.key(),
-            thread: thread.key(),
-            thread_authority: thread_authority.key(),
-            system_program: system_program.key(),
-            clockwork_program: clockwork_program.key(),
-            payer: PAYER_PUBKEY.key()
-        }
-        .to_account_metas(Some(true)),
-        data: crate::instruction::NextRaffle {}.data(),
-    };
+
+    let new_raffle_ix = Raffle::new_raffle_instruction(
+        &next_raffle_pda,
+        &tracker.to_account_info(),
+        &thread.to_account_info(),
+        &thread_authority.to_account_info(),
+        &PAYER_PUBKEY,
+    );  
 
     Ok(ThreadResponse {
         dynamic_instruction: Some(new_raffle_ix.into()),
@@ -150,36 +126,24 @@ pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<(
     let thread: &SystemAccount = &ctx.accounts.thread;
     let thread_authority = &ctx.accounts.thread_authority;
     let tracker = &ctx.accounts.tracker;
-
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
 
-    msg!("next_raffle_pda: {}", next_raffle_pda);
-
-
     // 1️⃣ Prepare an instruction to be automated.
-    
-    let new_raffle_ix = Instruction {
-        program_id: ID,
-        accounts: crate::accounts::NextRaffle {
-            new_raffle: next_raffle_pda.key(),
-            tracker: tracker.key(),
-            thread: thread.key(),
-            thread_authority: thread_authority.key(),
-            system_program: system_program.key(),
-            clockwork_program: clockwork_program.key(),
-            payer: PAYER_PUBKEY.key()
-        }
-        .to_account_metas(Some(true)),
-        data: crate::instruction::NextRaffle {}.data(),
+    let new_raffle_ix = Raffle::new_raffle_instruction(
+        &next_raffle_pda,
+        &tracker.to_account_info(),
+        &thread.to_account_info(),
+        &thread_authority.to_account_info(),
+        &PAYER_PUBKEY,
+    );  
+
+    // 2️⃣ Define a trigger when tracker is updated.
+    let trigger = Trigger::Account {
+        address: tracker.key(),
+        offset: RaffleTracker::CURRENT_RAFFLE_OFFSET,
+        size: RaffleTracker::CURRENT_RAFFLE_BYTES,
     };
 
-    // 2️⃣ Define a trigger when raffle active state turns false.
-    let trigger = clockwork_sdk::state::Trigger::Account {
-        address: tracker.key(),
-        offset: 8,
-        size: 8,
-    };
-    msg!("payer of the next tx is : {}", PAYER_PUBKEY.key());
     // 3️⃣ Create thread via CPI.
     let bump = *ctx.bumps.get("thread_authority").unwrap();
     clockwork_sdk::cpi::thread_create(

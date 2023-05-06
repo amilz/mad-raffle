@@ -1,9 +1,11 @@
-use anchor_lang::prelude::*;
-use solana_program::system_instruction;
+use std::str::FromStr;
+
+use anchor_lang::{prelude::*, system_program};
+use solana_program::{system_instruction, pubkey::Pubkey};
 
 use crate::model::RaffleError;
-use crate::state::{Raffle, TicketHolder, RaffleTracker};
-use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED};
+use crate::state::{Raffle, RaffleTracker};
+use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER};
 
 #[derive(Accounts)]
 pub struct BuyTicket<'info> {
@@ -21,8 +23,12 @@ pub struct BuyTicket<'info> {
     pub raffle: Account<'info, Raffle>,
     #[account(mut)]
     pub buyer: Signer<'info>,
-    #[account(mut)] // TODO Add constraint
+    #[account(
+        mut, 
+        address = Pubkey::from_str(FEE_VAULT).unwrap() @ RaffleError::InvalidVault
+    )]
     pub fee_vault: SystemAccount<'info>,
+    #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(
         seeds = [TRACKER_SEED.as_ref()],
@@ -38,13 +44,26 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
 
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
-
+/*     let current_time = Clock::get().unwrap().unix_timestamp;
+    require!(current_time < raffle.end_time, RaffleError::RaffleClosed); */
+    
+    if let Some(ticket_holder) = raffle
+        .tickets
+        .iter()
+        .find(|ticket_holder| ticket_holder.user == *buyer.key)
+    {
+        require!(
+            ticket_holder.qty < MAX_TICKETS_PER_USER,
+            RaffleError::MaxTicketsPerUserExceeded
+        );
+    }
+    
     // Transfer funds to the Raffle Pool
     let transfer_instruction = system_instruction::transfer(
             buyer.key, 
             &raffle.to_account_info().key, 
             TICKET_PRICE - TICKET_FEE
-        );
+    );
 
     anchor_lang::solana_program::program::invoke_signed(
         &transfer_instruction,
@@ -56,7 +75,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &[],
     )?;
 
-        // Transfer funds to the Raffle Pool
+    // Transfer funds to the Raffle Pool
     let fee_transfer_instruction = system_instruction::transfer(
         buyer.key, 
         &fee_vault.to_account_info().key, 
@@ -73,18 +92,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &[],
     )?;
 
-    // Update ticket count or add a new TicketHolder
-    match raffle
-        .tickets
-        .iter_mut()
-        .find(|ticket_holder| ticket_holder.user == *buyer.key)
-    {
-        Some(ticket_holder) => ticket_holder.qty += 1,
-        None => raffle.tickets.push(TicketHolder {
-            user: *buyer.key,
-            qty: 1,
-        }),
-    }
+    raffle.buy_ticket(&buyer.key);
 
     Ok(())
 }

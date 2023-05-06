@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 
 use crate::state::{Raffle, RaffleTracker};
-use crate::constants::{RAFFLE_SEED, RAFFLE_VERSION, TRACKER_SEED};
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED};
 
 
 #[derive(Accounts)]
@@ -19,6 +19,7 @@ pub struct CreateRaffle<'info> {
     pub raffle: Account<'info, Raffle>,
     #[account(mut)]
     pub user: Signer<'info>,
+    #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(
         mut,
@@ -33,15 +34,10 @@ pub fn create_raffle(ctx: Context<CreateRaffle>) -> Result<()> {
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
     tracker.current_raffle += 1;
 
-    raffle.set_inner(Raffle {
-        id: tracker.current_raffle,
-        active: true,
-        start_time: Clock::get().unwrap().unix_timestamp,
-        tickets: Vec::new(),
-        end_time: 0,
-        version: RAFFLE_VERSION,
-        bump: *ctx.bumps.get("raffle").unwrap()
-    });
+    raffle.initialize(
+        tracker.current_raffle,
+        *ctx.bumps.get("raffle").unwrap(),
+    );
 
     Ok(())
 }

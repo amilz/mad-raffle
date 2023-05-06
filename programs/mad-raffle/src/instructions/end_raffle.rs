@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 
 use crate::model::RaffleError;
 use crate::state::{Raffle, RaffleTracker};
@@ -18,6 +18,7 @@ pub struct EndRaffle<'info> {
     pub raffle: Account<'info, Raffle>,
     #[account(mut)]
     pub seller: Signer<'info>,
+    #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(
         mut,
