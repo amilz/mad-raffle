@@ -47,9 +47,9 @@ impl Raffle {
     const RAFFLE_VERSION:u8 = 1;
     pub fn get_space(ticket_holder_count: usize) -> usize {
         8 + // discriminator
-        1 + // version
-        8 + // bump
         8 + // id
+        1 + // version
+        1 + // bump
         1 + // active
         4 + // vec minimium 
         (TicketHolder::get_space() * (ticket_holder_count)) + // tickets
