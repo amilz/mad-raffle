@@ -11,8 +11,6 @@ pub use id::ID;
 
 #[program]
 pub mod mad_raffle {
-    use clockwork_sdk::state::ThreadResponse;
-
     use super::*;
     pub fn create_raffle(ctx: Context<CreateRaffle>) -> Result<()>{
         instructions::create_raffle(ctx)
@@ -29,13 +27,4 @@ pub mod mad_raffle {
     pub fn end_raffle(ctx: Context<EndRaffle>) -> Result<()>{
         instructions::end_raffle(ctx)
     }
-
-    pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<()>{
-        instructions::create_thread(ctx, thread_id)
-    }
-
-    pub fn next_raffle(ctx: Context<NextRaffle>) -> Result<ThreadResponse>{
-        instructions::next_raffle(ctx)
-    }
-
 }

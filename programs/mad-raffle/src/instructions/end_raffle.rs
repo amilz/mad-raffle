@@ -20,7 +20,6 @@ pub struct EndRaffle<'info> {
     pub seller: Signer<'info>,
     pub system_program: Program<'info, System>,
     #[account(
-        mut,
         seeds = [TRACKER_SEED.as_ref()],
         bump = tracker.bump
     )]
@@ -30,7 +29,7 @@ pub struct EndRaffle<'info> {
 pub fn end_raffle(ctx: Context<EndRaffle>) -> Result<()> {
     let raffle = &mut ctx.accounts.raffle;
     let seller = &mut ctx.accounts.seller;
-    let tracker = &mut ctx.accounts.tracker;
+
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
 
@@ -56,8 +55,8 @@ pub fn end_raffle(ctx: Context<EndRaffle>) -> Result<()> {
     //TODO transfer pNFT to program
     //TODO pay royalties
 
-    raffle.end_raffle();
-    tracker.increment();
-    msg!("New raffle to be created: {}", tracker.current_raffle);
+    raffle.active = false;
+    raffle.end_time = Clock::get().unwrap().unix_timestamp;
+
     Ok(())
 }

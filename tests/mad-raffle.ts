@@ -3,30 +3,22 @@ import { web3, Program, workspace } from '@project-serum/anchor';
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
-import { raffleNumberBuffer, RAFFLE_SEED, THREAD_AUTHORITY_SEED, TRACKER_SEED } from "./helpers/seeds";
-import { ClockworkProvider } from "@clockwork-xyz/sdk";
-
+import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 const { PublicKey, Keypair } = web3;
 // AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy
 const auth = Keypair.fromSecretKey(
-  new Uint8Array([]));
+  ));
 // VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6
 const VAULT = Keypair.fromSecretKey(
-  new Uint8Array([]));
-const CURRENT_RAFFLE = 1;
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+);
+const CURRENT_RAFFLE = 1;
 
 describe("Mad Raffle Tests", async () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.local());
-
   const program = await workspace.MadRaffle as Program<MadRaffle>;
   const { connection } = program.provider;
-  const provider = anchor.AnchorProvider.local();
-  anchor.setProvider(provider);
-
-  const clockworkProvider = ClockworkProvider.fromAnchorProvider(provider);
 
   const [trackerPda, _trackerBump] = await PublicKey.findProgramAddressSync(
     [TRACKER_SEED],
@@ -37,14 +29,6 @@ describe("Mad Raffle Tests", async () => {
     [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE))],
     program.programId
   );
-
-  const threadId = "raffle-tracker";
-  const [threadAuthority] = PublicKey.findProgramAddressSync(
-    [THREAD_AUTHORITY_SEED], // 👈 make sure it matches on the prog side
-    program.programId
-  );
-  const [threadAddress, threadBump] = clockworkProvider.getThreadPDA(threadAuthority, threadId)
-
   beforeEach(async () => {
     await connection.requestAirdrop(auth.publicKey, LAMPORTS_PER_SOL * 100);
   });
@@ -66,6 +50,7 @@ describe("Mad Raffle Tests", async () => {
       tx.recentBlockhash = blockhash;
       tx.lastValidBlockHeight = lastValidBlockHeight;
       let txId = await anchor.web3.sendAndConfirmTransaction(connection, tx, [auth], { commitment: "finalized" });
+      console.log('Tracker Created:', txId);
     }
   });
   beforeEach(async () => {
@@ -87,6 +72,7 @@ describe("Mad Raffle Tests", async () => {
       tx.recentBlockhash = blockhash;
       tx.lastValidBlockHeight = lastValidBlockHeight;
       let txId = await anchor.web3.sendAndConfirmTransaction(connection, tx, [auth], { commitment: "finalized" });
+      console.log('Raffle Created:', txId);
     }
   });
   it("Checks that the raffle is active", async () => {
@@ -97,27 +83,7 @@ describe("Mad Raffle Tests", async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
     assert.ok(raffleTracker.currentRaffle.eq(new anchor.BN(CURRENT_RAFFLE)), "currentRaffle should be 1");
   });
-  it("Creates a thread", async () => {
 
-
-    // Create the thread
-    const tx = await program.methods.createThread(Buffer.from(threadId))
-      .accountsStrict({
-        systemProgram: web3.SystemProgram.programId,
-        clockworkProgram: clockworkProvider.threadProgram.programId,
-        payer: auth.publicKey,
-        thread: threadAddress,
-        threadAuthority: threadAuthority,
-        tracker: trackerPda,
-      })
-      .signers([auth])
-      .transaction();
-    let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-    tx.feePayer = auth.publicKey;
-    tx.recentBlockhash = blockhash;
-    tx.lastValidBlockHeight = lastValidBlockHeight;
-    let txId = await anchor.web3.sendAndConfirmTransaction(connection, tx, [auth], { commitment: "finalized" });
-  });
   it("Checks the number of ticket buyers", async () => {
     const initialRaffleStatus = await program.account.raffle.fetch(rafflePda);
     if (initialRaffleStatus.tickets.length > 0) return;
@@ -203,26 +169,15 @@ describe("Mad Raffle Tests", async () => {
       blockhash: blockhash,
       lastValidBlockHeight: lastValidBlockHeight
     });
+
+    console.log('Raffle Ended:', tx);
+
     // Fetch the raffle status again
     const updatedRaffleStatus = await program.account.raffle.fetch(rafflePda);
 
     // Check if the raffle is no longer active and has an end time
     assert.ok(!updatedRaffleStatus.active, "raffle is not active");
     assert.ok(updatedRaffleStatus.endTime.toNumber() > 0, "raffle has an end time");
-  });
-  it("Checks the new raffle is active", async () => {
-    const [newRafflePda, _raffleBump] = await PublicKey.findProgramAddressSync(
-      [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE + 1))],
-      program.programId
-    );
-    // Wait for clockwork transaction 
-    await wait(30000);
-
-    // Assume the raffle has been created and is active
-    const newRaffleStatus = await program.account.raffle.fetch(newRafflePda);
-
-    // Check if the raffle is longer active 
-    assert.ok(newRaffleStatus.active, "raffle is active");
   });
 
 });
