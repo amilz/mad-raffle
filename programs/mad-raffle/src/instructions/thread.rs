@@ -7,6 +7,7 @@ use clockwork_sdk::utils::PAYER_PUBKEY;
 
 use crate::constants::{RAFFLE_SEED, TRACKER_SEED, THREAD_AUTHORITY_SEED};
 use crate::id::ID;
+use crate::model::RaffleError;
 use crate::state::{RaffleTracker, Raffle};
 
 #[derive(Accounts)]
@@ -49,8 +50,11 @@ pub struct NextRaffle<'info> {
     )]
     pub new_raffle: Account<'info, Raffle>,
     /// CHECK (for some reason my address constraint isn't working)
-    #[account(mut, signer )]
-    pub payer: AccountInfo<'info>, // TODO Add constraint
+    #[account(
+        mut, 
+        signer
+     )]
+    pub payer: AccountInfo<'info>,
 }
 
 /// Trigger response from the thread
@@ -61,6 +65,7 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
     let new_raffle = &mut ctx.accounts.new_raffle;    
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
+    require!(!new_raffle.active, RaffleError::RaffleAlreadyActive);
 
     // 1 - CREATE THE NEW RAFFLE
     new_raffle.initialize(
@@ -69,7 +74,6 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     );
 
     // 2 - UPDATE THE DYNAMIC CLOCKWORK THREAD
-
     let new_raffle_ix = Raffle::new_raffle_instruction(
         &next_raffle_pda,
         &tracker.to_account_info(),
@@ -93,7 +97,7 @@ pub struct CreateThread<'info> {
     pub clockwork_program: Program<'info, clockwork_sdk::ThreadProgram>,
 
     /// The signer who will pay to initialize the program.
-    /// (not to be confused with the thread executions).
+    /// (not to be confused with the thread executions). //TODO define a payer for the thread executions
     #[account(mut)]
     pub payer: Signer<'info>,
 

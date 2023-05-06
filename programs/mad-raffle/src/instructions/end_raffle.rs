@@ -40,7 +40,7 @@ pub fn end_raffle(ctx: Context<EndRaffle>) -> Result<()> {
     let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() as usize));
     let available_balance_lamports: u64 = raffle.to_account_info().lamports();
     let available_balance: u64 = available_balance_lamports.saturating_sub(rent_required);
-    let royalties_rate: u64 = 5; // 5% royalty rate, TODO fetch from metadata
+    let royalties_rate: u64 = 50; //BPS .5% royalty rate, TODO fetch from metadata
     let total_rate: u64 = 100 + royalties_rate;
 
     let payment_to_seller: u64 = (available_balance / total_rate) * 100;
