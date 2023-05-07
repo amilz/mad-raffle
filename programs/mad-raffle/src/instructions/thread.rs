@@ -120,13 +120,29 @@ pub struct CreateThread<'info> {
     pub tracker: Account<'info, RaffleTracker> 
 }
 
+impl<'info> CreateThread<'info> {
+    pub fn thread_create_ctx<'a, 'b, 'c>(
+        &self,
+        signer_seeds: &'a [&'b [&'c [u8]]],
+    ) -> CpiContext<'a, 'b, 'c, 'info, clockwork_sdk::cpi::ThreadCreate<'info>> {
+        let program = self.clockwork_program.to_account_info().clone();
+        let accounts = clockwork_sdk::cpi::ThreadCreate {
+            payer: self.payer.to_account_info().clone(),
+            system_program: self.system_program.to_account_info().clone(),
+            thread: self.thread.to_account_info().clone(),
+            authority: self.thread_authority.to_account_info().clone(),
+        };
+        CpiContext::new_with_signer(program, accounts, signer_seeds)
+    }
+}
+
+
+
+
 
 /// Creates a new thread that will trigger the next raffle when previous raffle ends.
 pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<()> {
     // Get accounts.
-    let system_program = &ctx.accounts.system_program;
-    let clockwork_program = &ctx.accounts.clockwork_program;
-    let payer: &Signer = &ctx.accounts.payer;
     let thread: &SystemAccount = &ctx.accounts.thread;
     let thread_authority = &ctx.accounts.thread_authority;
     let tracker = &ctx.accounts.tracker;
@@ -150,22 +166,10 @@ pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<(
 
     // 3️⃣ Create thread via CPI.
     let bump = *ctx.bumps.get("thread_authority").unwrap();
-    clockwork_sdk::cpi::thread_create(
-        CpiContext::new_with_signer(
-            clockwork_program.to_account_info(),
-            clockwork_sdk::cpi::ThreadCreate {
-                payer: payer.to_account_info(),
-                system_program: system_program.to_account_info(),
-                thread: thread.to_account_info(),
-                authority: thread_authority.to_account_info(),
-            },
-            &[&[THREAD_AUTHORITY_SEED, &[bump]]],
-        ),
-        LAMPORTS_PER_SOL,       // amount
-        thread_id,              // id
-        vec![new_raffle_ix.into()], // instructions
-        trigger,                // trigger
-    )?;
+    let signer_seeds: &[&[&[u8]]] = &[&[THREAD_AUTHORITY_SEED, &[bump]]];
+    let cpi_ctx = ctx.accounts.thread_create_ctx(signer_seeds);
+    clockwork_sdk::cpi::thread_create(cpi_ctx, LAMPORTS_PER_SOL, thread_id, vec![new_raffle_ix.into()], trigger)?;
+
 
     Ok(())
 }
