@@ -20,6 +20,6 @@ anchor-lang = "0.27.0"
 clockwork-sdk = { version = "2.0.15" }
 mpl-token-metadata = { version="1.7.0", features = [ "no-entrypoint" ] }
 mpl-token-auth-rules = "1.0.0"
-anchor-spl = "0.27.0"
+anchor-spl ={version = "0.27.0", features = ["metadata"]}
 thiserror = "1.0.30"
 solana-program = "=1.15.2"

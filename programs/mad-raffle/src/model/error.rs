@@ -15,3 +15,11 @@ pub enum RaffleError {
     #[msg("Raffle is already active")]
     RaffleAlreadyActive,
 }
+
+#[error_code]
+pub enum PnftError {
+    #[msg("Bad Metadata")]
+    BadMetadata,
+    #[msg("Bad Ruleset")]
+    BadRuleset
+}

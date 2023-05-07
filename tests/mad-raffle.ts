@@ -8,11 +8,9 @@ import { ClockworkProvider } from "@clockwork-xyz/sdk";
 
 const { PublicKey, Keypair } = web3;
 // AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy
-const auth = Keypair.fromSecretKey(
-  new Uint8Array([]));
+const auth = Keypair.fromSecretKey();
 // VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6
-const VAULT = Keypair.fromSecretKey(
-  new Uint8Array([]));
+const VAULT = Keypair.fromSecretKey();
 const CURRENT_RAFFLE = 1;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -46,7 +44,13 @@ describe("Mad Raffle Tests", async () => {
   const [threadAddress, threadBump] = clockworkProvider.getThreadPDA(threadAuthority, threadId)
 
   beforeEach(async () => {
-    await connection.requestAirdrop(auth.publicKey, LAMPORTS_PER_SOL * 100);
+    let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+    const airdropTx = await connection.requestAirdrop(auth.publicKey, LAMPORTS_PER_SOL * 100);
+    await connection.confirmTransaction({
+      signature: airdropTx,
+      lastValidBlockHeight,
+      blockhash
+    }, 'finalized');  
   });
   beforeEach(async () => {
     try {
