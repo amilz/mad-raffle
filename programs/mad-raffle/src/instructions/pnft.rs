@@ -7,6 +7,9 @@ use anchor_spl::{
 use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
 use mpl_token_metadata::{self,processor::AuthorizationData};
 
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED};
+use crate::model::RaffleError;
+use crate::state::{Raffle, RaffleTracker};
 use crate::utils::send_pnft;
 
 #[derive(Accounts)]
@@ -87,6 +90,21 @@ pub struct TransferPNFT<'info> {
     // - rules account
     // - mint_whitelist_proof
     // - creator_whitelist_proof
+    #[account(
+        mut, 
+        seeds = [
+            RAFFLE_SEED.as_ref(),
+            &(tracker.current_raffle).to_le_bytes(),  
+        ],
+        bump = raffle.bump
+    )]
+    pub raffle: Account<'info, Raffle>,
+    #[account(
+        mut,
+        seeds = [TRACKER_SEED.as_ref()],
+        bump = tracker.bump
+    )]
+    pub tracker: Account<'info, RaffleTracker>
 }
 
 #[derive(Accounts)]
@@ -211,5 +229,47 @@ pub fn transfer_pnft<'info>(
         authorization_data,
         // None,
     )?;
+
+    let raffle = &mut ctx.accounts.raffle;
+    let seller = &mut ctx.accounts.owner;
+    let tracker = &mut ctx.accounts.tracker;
+    // Verify raffle is active
+    require!(raffle.active, RaffleError::NotActive);
+
+
+    let metadata = &mut ctx.accounts.nft_metadata;
+    let creators = &metadata.data.creators;
+    let collection = &metadata.collection;
+    let collection_verified = &metadata.collection.as_ref().map(|c| c.verified);
+    let collection_key = &metadata.collection.as_ref().map(|c| c.key);
+    let seller_fee_basis_points = metadata.data.seller_fee_basis_points; 
+
+    msg!("seller_fee_basis_points: {}", seller_fee_basis_points);
+    msg!("creators: {:?}", creators);
+    msg!("collection: {:?}", collection);
+    msg!("collection_verified: {:?}", collection_verified);
+    msg!("collection_key: {:?}", collection_key);
+    
+    // Calculate payment amount and royalty amount
+    // Leave enough lamports in the account to cover rent
+    let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() as usize));
+    let available_balance_lamports: u64 = raffle.to_account_info().lamports();
+    let available_balance: u64 = available_balance_lamports.saturating_sub(rent_required);
+    let royalties_rate: u64 = 50; // BPS 0.5% royalty rate, TODO fetch from metadata
+    let total_rate: u64 = 10000; // BPS 100% rate
+    
+    // TODO: fix payments and such
+    let payment_to_seller: u64 = (available_balance * (total_rate - royalties_rate)) / total_rate;
+    let _royalties_payment: u64 = available_balance - payment_to_seller;
+
+    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller;
+    **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
+
+    //TODO pay royalties
+    raffle.end_raffle();
+    tracker.increment();
+    msg!("New raffle to be created: {}", tracker.current_raffle);
+
+
     Ok(())
 }

@@ -1,9 +1,9 @@
 import { Metaplex } from "@metaplex-foundation/js";
 import {
     AuthorizationData,
-    Metadata,
-    PROGRAM_ID as TMETA_PROG_ID,
+    Metadata
 } from "@metaplex-foundation/mpl-token-metadata";
+
 import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import * as anchor from "@project-serum/anchor";
 import { Idl } from "@project-serum/anchor";
@@ -11,6 +11,7 @@ import { Connection, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from
 import { MadRaffle } from "../../target/types/mad_raffle";
 import { fetchNft, findTokenRecordPDA } from './pnft';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+const TMETA_PROG_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
 export class PNftTransferClient  {
 
@@ -122,13 +123,17 @@ export class PNftTransferClient  {
         sourceAta,
         destAta,
         owner,
-        receiver
+        receiver, 
+        raffle,
+        tracker,
     }: {
         nftMint: PublicKey;
         sourceAta: PublicKey;
         destAta: PublicKey;
         owner: PublicKey;
         receiver: PublicKey;
+        raffle: PublicKey;
+        tracker: PublicKey;
     }) {
         //pnft
         const {
@@ -175,7 +180,9 @@ export class PNftTransferClient  {
                     authorizationRulesProgram: AUTH_PROG_ID,
                     tokenMetadataProgram: TMETA_PROG_ID,
                     instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-                }
+                },
+                raffle,
+                tracker,
             })
             .remainingAccounts(remainingAccounts)
 

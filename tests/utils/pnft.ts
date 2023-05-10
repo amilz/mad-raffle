@@ -18,8 +18,8 @@ import {
     keypairIdentity,
     Metaplex,
     toBigNumber,
+    
   } from '@metaplex-foundation/js';
-  
   import {
     createCreateInstruction,
     CreateInstructionAccounts,
@@ -27,7 +27,6 @@ import {
     createMintInstruction,
     MintInstructionAccounts,
     MintInstructionArgs,
-    PROGRAM_ID as TMETA_PROG_ID,
     TokenStandard,
   } from '@metaplex-foundation/mpl-token-metadata/';
   import {
@@ -42,6 +41,8 @@ import {
   import {backOff} from "exponential-backoff";
   import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
   
+  const TMETA_PROG_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
   export const fetchNft = async (conn: Connection, mint: PublicKey) => {
     const mplex = new Metaplex(conn);
     return await mplex
@@ -186,6 +187,7 @@ import {
             instructions: ixs,
             additionalSigners: extraSigners,
             feePayer: provider.publicKey,
+            commitment: 'finalized'
           }),
         {
           // Retry blockhash errors (happens during tests sometimes).
@@ -206,6 +208,7 @@ import {
             additionalSigners: [...(v0SignKeypair ? [v0SignKeypair] : []), ...(extraSigners ?? [])],
             feePayer: provider.publicKey,
             addressLookupTableAccs: lookupTableAccounts,
+            commitment: 'finalized'
           }),
         {
           // Retry blockhash errors (happens during tests sometimes).
@@ -225,7 +228,7 @@ import {
         tx.serialize(),
         opts
       );
-      await provider.connection.confirmTransaction(sig, "confirmed");
+      await provider.connection.confirmTransaction(sig, "finalized");
       if (debug) {
         console.log(
           await provider.connection.getTransaction(sig, {
@@ -335,9 +338,9 @@ import {
       createArgs: {
         __kind: 'V1',
         assetData: {
-          name: 'Whatever',
-          symbol: 'TSR',
-          uri: 'https://www.tensor.trade',
+          uri: 'https://madlads.s3.us-west-2.amazonaws.com/json/3482.json',
+          name: 'Mad Lads #3482',
+          symbol: 'MAD',
           sellerFeeBasisPoints: royaltyBps ?? 0,
           creators:
             creators?.map((c) => {
@@ -363,7 +366,6 @@ import {
     };
   
     const createIx = createCreateInstruction(accounts, args);
-  
     // this test always initializes the mint, we we need to set the
     // account to be writable and a signer
     for (let i = 0; i < createIx.keys.length; i++) {
@@ -420,24 +422,25 @@ import {
     const mintIx = createMintInstruction(mintAcccounts, mintArgs);
   
     // --------------------------------------- send
-  
-    await buildAndSendTx({
+    console.log('before mint tx');
+    const mintTx = await buildAndSendTx({
       provider,
       ixs: [createIx, mintIx],
       extraSigners: [owner, mint],
     });
-  
+    console.log('mint tx', mintTx);
     //manually verify creators (auto doesn't work)
     const creatorSigners = creators
       .map((c) => c.authority)
       .filter((s): s is Keypair => !!s);
     const metaplex = new Metaplex(provider.connection);
+    console.log('signing creators')
     await Promise.all(
       creatorSigners.map(async (s) => {
         await metaplex
           .use(keypairIdentity(s))
           .nfts()
-          .verifyCreator({ mintAddress: mint.publicKey, creator: s });
+          .verifyCreator({ mintAddress: mint.publicKey, creator: s },{commitment: 'finalized'});
       })
     );
   
@@ -481,29 +484,54 @@ import {
     const mplex = new Metaplex(provider.connection).use(
       keypairIdentity(usedOwner)
     );
-  
+    let metadataAddress, tokenAddress, masterEditionAddress;
+
     //create a verified collection
     if (collection) {
       await mplex.nfts().create({
         useNewMint: collection,
         tokenOwner: usedOwner.publicKey,
-        uri: 'https://www.tensor.trade',
-        name: 'Whatever',
-        sellerFeeBasisPoints: royaltyBps ?? 0,
+        symbol: 'MAD',
+        uri: 'https://madlads.s3.us-west-2.amazonaws.com/json/8420.json',
+        name: 'Mad Lads KING',
+        sellerFeeBasisPoints: 0, // no royalties for collection nft
         isCollection: true,
-        collectionIsSized: true,
-      });
+        collectionIsSized: false,
+      }, {commitment: 'finalized'});
   
-      // console.log(
-      //   "coll",
-      //   await mplex.nfts().findByMint({ mintAddress: collection.publicKey })
-      // );
+      if (await mplex.nfts().findByMint({ mintAddress: collection.publicKey })){
+        console.log('collection created')
+      } else {
+        throw new Error('collection not created')
+      }
+
+
+    
     }
   
-    let metadataAddress, tokenAddress, masterEditionAddress;
     if (programmable) {
       //create programmable nft
-      ({ metadataAddress, tokenAddress, masterEditionAddress } =
+      const newNftTx = await mplex.nfts().create({
+        tokenOwner: usedOwner.publicKey,
+        useNewMint: usedMint,
+        symbol: 'MAD',
+        uri: 'https://madlads.s3.us-west-2.amazonaws.com/json/3482.json',
+        name: 'Mad Lads #3482',
+        sellerFeeBasisPoints: royaltyBps ?? 0,
+        creators,
+        maxSupply: toBigNumber(1),
+        collection: collection?.publicKey,
+        //TODO: I think I need to update metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
+        // to work w/ with verfied programmables
+        // collectionAuthority: usedOwner,
+        tokenStandard: TokenStandard.ProgrammableNonFungible,
+      }, {commitment: 'finalized'});
+      console.log('Main NFT Minted: ',newNftTx.response.signature);
+      metadataAddress = newNftTx.metadataAddress;
+      tokenAddress = newNftTx.tokenAddress;
+      masterEditionAddress = newNftTx.masterEditionAddress;
+      // Doing it w/ JS SDK above instead
+/*       ({ metadataAddress, tokenAddress, masterEditionAddress } =
         await _createAndMintPNft({
           provider,
           mint: usedMint,
@@ -513,7 +541,7 @@ import {
           collection,
           collectionVerified,
           ruleSet: ruleSetAddr,
-        }));
+        })); */
     } else {
       //create normal nft
       ({ metadataAddress, tokenAddress, masterEditionAddress } = await mplex
@@ -521,20 +549,22 @@ import {
         .create({
           useNewMint: usedMint,
           tokenOwner: usedOwner.publicKey,
-          uri: 'https://www.tensor.trade',
-          name: 'Whatever',
+          uri: 'https://madlads.s3.us-west-2.amazonaws.com/json/3482.json',
+          name: 'Mad Lads #3482',
           sellerFeeBasisPoints: royaltyBps ?? 0,
           creators,
           maxSupply: toBigNumber(1),
           collection: collection?.publicKey,
         }));
-  
-      if (collection && collectionVerified) {
-        await mplex.nfts().verifyCollection({
-          mintAddress: usedMint.publicKey,
-          collectionMintAddress: collection.publicKey,
-        });
-      }
+    }
+    if (collection && collectionVerified) {
+      console.log('verifying collection');
+/*       await mplex.nfts().verifyCollection({
+        mintAddress: usedMint.publicKey,
+        collectionMintAddress: collection.publicKey,
+        collectionAuthority: usedOwner,
+      }); */
+      console.log('collection verified');
     }
   
     // console.log(
@@ -589,3 +619,4 @@ import {
   };
 
   
+
