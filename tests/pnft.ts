@@ -123,7 +123,8 @@ describe("pnft_transfer tests", () => {
             destAta: destAta,
             owner: nftOwner.publicKey,
             tracker: trackerPda,
-            raffle: rafflePda
+            raffle: rafflePda,
+            creators: creators.map(creator=>creator.address),
         })
         await buildAndSendTx({
             provider,

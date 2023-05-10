@@ -108,7 +108,17 @@ pub struct TransferPNFT<'info> {
         seeds = [TRACKER_SEED.as_ref()],
         bump = tracker.bump
     )]
-    pub tracker: Account<'info, RaffleTracker>
+    pub tracker: Account<'info, RaffleTracker>,
+    #[account(mut)]
+    pub creator1: Option<AccountInfo<'info>>,
+    #[account(mut)]
+    pub creator2: Option<AccountInfo<'info>>,
+    #[account(mut)]
+    pub creator3: Option<AccountInfo<'info>>,
+    #[account(mut)]
+    pub creator4: Option<AccountInfo<'info>>,
+    #[account(mut)]
+    pub creator5: Option<AccountInfo<'info>>,
 }
 
 #[derive(Accounts)]
@@ -242,13 +252,12 @@ pub fn transfer_pnft<'info>(
 
 
     let metadata = &mut ctx.accounts.nft_metadata;
-    let creators = &metadata.data.creators;
+    let empty_vec = vec![];
+    let creators = metadata.data.creators.as_ref().unwrap_or(&empty_vec);
     let collection = &metadata.collection;
     let collection_verified = &metadata.collection.as_ref().map(|c| c.verified);
     let collection_key = &metadata.collection.as_ref().map(|c| c.key);
-    let seller_fee_basis_points = metadata.data.seller_fee_basis_points; 
 
-    msg!("seller_fee_basis_points: {}", seller_fee_basis_points);
     msg!("creators: {:?}", creators);
     msg!("collection: {:?}", collection);
     msg!("collection_verified: {:?}", collection_verified);
@@ -256,20 +265,51 @@ pub fn transfer_pnft<'info>(
     
     // Calculate payment amount and royalty amount
     // Leave enough lamports in the account to cover rent
-    let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() as usize));
-    let available_balance_lamports: u64 = raffle.to_account_info().lamports();
-    let available_balance: u64 = available_balance_lamports.saturating_sub(rent_required);
-    let royalties_rate: u64 = 50; // BPS 0.5% royalty rate, TODO fetch from metadata
+    let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() + 1 as usize));
+    let current_raffle_lamports: u64 = raffle.to_account_info().lamports();
+    let available_balance: u64 = current_raffle_lamports.saturating_sub(rent_required);
+    let seller_fee_basis_points = metadata.data.seller_fee_basis_points as u64;
     let total_rate: u64 = 10000; // BPS 100% rate
     
-    // TODO: fix payments and such
-    let payment_to_seller: u64 = (available_balance * (total_rate - royalties_rate)) / total_rate;
-    let _royalties_payment: u64 = available_balance - payment_to_seller;
+    let payment_to_seller = (available_balance * total_rate) / (total_rate + seller_fee_basis_points);
+    let royalties_payment: u64 = available_balance - payment_to_seller;
 
-    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller;
+    let creator_accounts = [
+        ctx.accounts.creator1.as_ref(),
+        ctx.accounts.creator2.as_ref(),
+        ctx.accounts.creator3.as_ref(),
+        ctx.accounts.creator4.as_ref(),
+        ctx.accounts.creator5.as_ref(),
+    ];
+    let mut royalties_paid = 0;
+    let min_creator_rent = Rent::get()?.minimum_balance(0);
+
+    for creator in creators.iter() {
+        // Find the account that matches the current creator
+        if let Some(creator_account) = creator_accounts.iter().find(|account| {
+            account.map_or(false, |account| account.key() == creator.address)
+        }) {
+            let creator_payment = (royalties_payment * creator.share as u64) / 100;
+    
+            // Create a let binding for the AccountInfo object
+            let creator_account_info = creator_account.unwrap().to_account_info();
+            let mut creator_lamports = creator_account_info.try_borrow_mut_lamports()?;
+            let creator_balance = **creator_lamports;
+    
+            // Don't send if the creator's balance is too low to pay rent (cause tx to fail)
+            if (creator_balance + creator_payment) > min_creator_rent {
+                royalties_paid += creator_payment;
+                **creator_lamports += creator_payment;
+            }
+        }
+    }
+    
+    
+    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
-    //TODO pay royalties
+    // TODO Close seller ATA
+
     raffle.end_raffle();
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);

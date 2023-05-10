@@ -126,6 +126,7 @@ export class PNftTransferClient  {
         //receiver, 
         raffle,
         tracker,
+        creators
     }: {
         nftMint: PublicKey;
         sourceAta: PublicKey;
@@ -134,6 +135,7 @@ export class PNftTransferClient  {
         //receiver: PublicKey;
         raffle: PublicKey;
         tracker: PublicKey;
+        creators: PublicKey[];
     }) {
         //pnft
         const {
@@ -159,7 +161,10 @@ export class PNftTransferClient  {
                 isWritable: false,
             });
         }
-
+        const creatorAccounts = creators.reduce((acc, creator, i) => {
+            acc[`creator${i + 1}`] = creator;
+            return acc;
+          }, {});
         const builder = this.program.methods
             .transferPnft(authDataSerialized, !!ruleSet)
             .accounts({
@@ -182,6 +187,7 @@ export class PNftTransferClient  {
                 },
                 raffle,
                 tracker,
+                ...creatorAccounts,
             })
             .remainingAccounts(remainingAccounts)
 
