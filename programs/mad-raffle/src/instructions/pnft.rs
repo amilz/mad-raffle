@@ -18,21 +18,23 @@ use crate::utils::send_pnft;
 pub struct TransferPNFT<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
-    /// CHECK:
-    pub receiver: AccountInfo<'info>,
     #[account(mut)]
     pub src: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
+    #[account(
+        init,
+        payer = owner,
+        associated_token::mint = nft_mint,
+        associated_token::authority = raffle,
+    )]
     pub dest: Box<Account<'info, TokenAccount>>,
     pub nft_mint: Box<Account<'info, Mint>>,
-    // misc
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub associated_token_program: Program<'info, AssociatedToken>,
 
     // pfnt
-    //can't deserialize directly coz Anchor traits not implemented
     /// CHECK: assert_decode_metadata + seeds below
     #[account(
         mut,
@@ -216,7 +218,7 @@ pub fn transfer_pnft<'info>(
         &ctx.accounts.owner.to_account_info(),
         &ctx.accounts.src,
         &ctx.accounts.dest,
-        &ctx.accounts.receiver.to_account_info(),
+        &ctx.accounts.raffle.to_account_info(),
         &ctx.accounts.nft_mint,
         &ctx.accounts.nft_metadata,
         &ctx.accounts.edition,

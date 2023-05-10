@@ -123,7 +123,7 @@ export class PNftTransferClient  {
         sourceAta,
         destAta,
         owner,
-        receiver, 
+        //receiver, 
         raffle,
         tracker,
     }: {
@@ -131,7 +131,7 @@ export class PNftTransferClient  {
         sourceAta: PublicKey;
         destAta: PublicKey;
         owner: PublicKey;
-        receiver: PublicKey;
+        //receiver: PublicKey;
         raffle: PublicKey;
         tracker: PublicKey;
     }) {
@@ -171,7 +171,6 @@ export class PNftTransferClient  {
                 nftMint,
                 edition: nftEditionPda,
                 nftMetadata: meta,
-                receiver,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 rent: anchor.web3.SYSVAR_RENT_PUBKEY,

@@ -7,6 +7,7 @@ import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthor
 import { PNftTransferClient } from './utils/PNftTransferClient';
 import { MadRaffle } from "../target/types/mad_raffle";
 import { COLLECTION_KEYPAIR } from "./helpers/keys";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 describe("pnft_transfer tests", () => {
     // Configure the client to use the local cluster.
@@ -103,21 +104,24 @@ describe("pnft_transfer tests", () => {
             collectionVerified: true
         });
 
-        const destAta = await getOrCreateAssociatedTokenAccount(
+        const old_destAta = await getOrCreateAssociatedTokenAccount(
             provider.connection,
             nftReceiver,
             mint,
             nftReceiver.publicKey
         );
-        const initialReceiverBalance = await provider.connection.getTokenAccountBalance(destAta.address)
-        expect(initialReceiverBalance.value.uiAmount).to.equal(0)
 
+        let destAta = await getAssociatedTokenAddress(mint, rafflePda, true);
+
+// we don't need to do this b/c we're not initiating it yet
+/*         const initialReceiverBalance = await provider.connection.getTokenAccountBalance(destAta)
+        expect(initialReceiverBalance.value.uiAmount).to.equal(0)
+ */
         const builder = await pNftTransferClient.buildTransferPNFT({
             sourceAta: ata,
             nftMint: mint,
-            destAta: destAta.address,
+            destAta: destAta,
             owner: nftOwner.publicKey,
-            receiver: nftReceiver.publicKey,
             tracker: trackerPda,
             raffle: rafflePda
         })
@@ -127,7 +131,7 @@ describe("pnft_transfer tests", () => {
             extraSigners: [nftOwner],
         });
 
-        const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta.address)
+        const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta)
         expect(newReceiverBalance.value.uiAmount).to.equal(1)
 
     });
