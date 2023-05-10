@@ -21,5 +21,9 @@ pub enum PnftError {
     #[msg("Bad Metadata")]
     BadMetadata,
     #[msg("Bad Ruleset")]
-    BadRuleset
+    BadRuleset,
+    #[msg("Invalid Collection")]
+    InvalidCollectionAddress,
+    #[msg("Not Verified by the Collection")]
+    NotVerifiedByCollection,
 }

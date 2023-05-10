@@ -6,6 +6,7 @@ import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthorizationRules } from "./utils/pnft";
 import { PNftTransferClient } from './utils/PNftTransferClient';
 import { MadRaffle } from "../target/types/mad_raffle";
+import { COLLECTION_KEYPAIR } from "./helpers/keys";
 
 describe("pnft_transfer tests", () => {
     // Configure the client to use the local cluster.
@@ -90,7 +91,7 @@ describe("pnft_transfer tests", () => {
         const creators = Array(5)
             .fill(null)
             .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-        const collection = Keypair.generate(); // TODO Set this to defined collection
+        const collection = COLLECTION_KEYPAIR; // TODO Set this to defined collection
         const { mint, ata } = await createAndFundATA({
             provider: provider,
             owner: nftOwner,

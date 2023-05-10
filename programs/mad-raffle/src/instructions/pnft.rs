@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anchor_lang::prelude::*;
 use anchor_spl::metadata::MetadataAccount;
 use anchor_spl::{
@@ -7,8 +9,8 @@ use anchor_spl::{
 use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
 use mpl_token_metadata::{self,processor::AuthorizationData};
 
-use crate::constants::{RAFFLE_SEED, TRACKER_SEED};
-use crate::model::RaffleError;
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS};
+use crate::model::{RaffleError, PnftError};
 use crate::state::{Raffle, RaffleTracker};
 use crate::utils::send_pnft;
 
@@ -41,8 +43,8 @@ pub struct TransferPNFT<'info> {
         ],
         seeds::program = mpl_token_metadata::id(),
         bump,
-        //constraint = nft_metadata.collection.as_ref().unwrap().verified
-        //TODO add mad lads constraint
+        //constraint = nft_metadata.collection.as_ref().unwrap().verified == true @ PnftError::NotVerifiedByCollection
+        constraint = nft_metadata.collection.as_ref().unwrap().key == Pubkey::from_str(COLLECTION_ADDRESS).unwrap() @ PnftError::InvalidCollectionAddress    
     )]
     pub nft_metadata: Account<'info,MetadataAccount>,
     //note that MASTER EDITION and EDITION share the same seeds, and so it's valid to check them here
