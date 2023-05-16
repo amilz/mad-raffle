@@ -13,3 +13,13 @@ wallet = "wallet.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+# pnft = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/pnft.ts" // gives me an issue w/ local validator
+clock = "clockwork localnet --bpf-program  metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./tests/programs/metadata.so --bpf-program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg ./tests/programs/rules.so"
+
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "./tests/programs/metadata.so"
+
+[[test.genesis]]
+address = "auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg"
+program = "./tests/programs/rules.so"

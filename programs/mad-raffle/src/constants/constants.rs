@@ -21,3 +21,8 @@ pub const SUPER_RAFFLE_FEE: u64 = 10_000_000; // 0.0069 SOL in lamports
 
 /// The maximum number of tickets that can be purchased per user.
 pub const MAX_TICKETS_PER_USER: u8 = 255;
+
+/// Collection Address
+pub const COLLECTION_ADDRESS: &str = "CLxN2mQsewGLsTKw3gML1AWFQjrWpG6WgLYTLX9BdhRp";
+// TODO FOR PROD
+// pub const COLLECTION_ADDRESS: &str = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w";
