@@ -24,3 +24,5 @@ pub const MAX_TICKETS_PER_USER: u8 = 255;
 
 /// Collection Address
 pub const COLLECTION_ADDRESS: &str = "CLxN2mQsewGLsTKw3gML1AWFQjrWpG6WgLYTLX9BdhRp";
+// TODO FOR PROD
+// pub const COLLECTION_ADDRESS: &str = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w";
