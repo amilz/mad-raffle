@@ -35,6 +35,7 @@ pub struct Raffle {
     pub tickets: Vec<TicketHolder>,
     pub start_time: i64,
     pub end_time: i64,
+    pub winner: Option<Pubkey>
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
@@ -54,7 +55,8 @@ impl Raffle {
         4 + // vec minimium 
         (TicketHolder::get_space() * (ticket_holder_count)) + // tickets
         8 + // start time
-        8 // end time
+        8 +// end time
+        32  // winner
     }
     pub fn initialize(&mut self, raffle_id: u64, bump: u8) {
         self.id = raffle_id;
@@ -88,6 +90,7 @@ impl Raffle {
         thread: &AccountInfo,
         thread_authority: &AccountInfo,
         payer_pubkey: &Pubkey,
+        current_raffle: &AccountInfo,
     ) -> Instruction {
         Instruction {
             program_id: ID,
@@ -99,6 +102,7 @@ impl Raffle {
                 system_program: system_program::id(),
                 clockwork_program: clockwork_sdk::ID,
                 payer: *payer_pubkey,
+                current_raffle: current_raffle.key()
             }
             .to_account_metas(Some(true)),
             data: crate::instruction::NextRaffle {}.data(),

@@ -111,6 +111,7 @@ describe("Mad Raffle Tests", async () => {
         thread: threadAddress,
         threadAuthority: threadAuthority,
         tracker: trackerPda,
+        currentRaffle: rafflePda
       })
       .signers([AUTH_KEYPAIR])
       .transaction();
