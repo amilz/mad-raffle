@@ -1,6 +1,6 @@
 use anchor_lang::{prelude::*, InstructionData};
 use solana_program::{pubkey::Pubkey, instruction::Instruction, system_program};
-use crate::{id::ID, constants::{RAFFLE_SEED}};
+use crate::{id::ID, constants::{RAFFLE_SEED}, utils::select_winner};
 
 #[account]
 pub struct RaffleTracker {
@@ -70,6 +70,7 @@ impl Raffle {
     pub fn end_raffle(&mut self) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
+        self.select_winner();
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -90,7 +91,6 @@ impl Raffle {
         thread: &AccountInfo,
         thread_authority: &AccountInfo,
         payer_pubkey: &Pubkey,
-        current_raffle: &AccountInfo,
     ) -> Instruction {
         Instruction {
             program_id: ID,
@@ -102,12 +102,23 @@ impl Raffle {
                 system_program: system_program::id(),
                 clockwork_program: clockwork_sdk::ID,
                 payer: *payer_pubkey,
-                current_raffle: current_raffle.key()
             }
             .to_account_metas(Some(true)),
             data: crate::instruction::NextRaffle {}.data(),
         }
     }
+    fn select_winner(&mut self) {
+        match select_winner(self) {
+            Ok(winner) => {
+                self.winner = Some(winner);
+                msg!("The winner is {:?}", self.winner);
+            }
+            Err(e) => {
+                msg!("Error selecting winner: {:?}", e);
+            }
+        }
+    }
+    
 }
 
 impl TicketHolder {

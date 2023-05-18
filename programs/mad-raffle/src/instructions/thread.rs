@@ -9,7 +9,6 @@ use crate::constants::{RAFFLE_SEED, TRACKER_SEED, THREAD_AUTHORITY_SEED};
 use crate::id::ID;
 use crate::model::RaffleError;
 use crate::state::{RaffleTracker, Raffle};
-use crate::utils::select_winner;
 
 #[derive(Accounts)]
 pub struct NextRaffle<'info> {
@@ -56,15 +55,6 @@ pub struct NextRaffle<'info> {
         signer
      )]
     pub payer: AccountInfo<'info>,
-    #[account(
-        mut, 
-        seeds = [
-            RAFFLE_SEED.as_ref(),
-            &(tracker.current_raffle - 1).to_le_bytes(),  
-        ],
-        bump = current_raffle.bump
-    )]
-    pub current_raffle: Account<'info, Raffle>,
 }
 
 /// Trigger response from the thread
@@ -74,7 +64,6 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     let thread_authority = &mut ctx.accounts.thread_authority;
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
     let new_raffle = &mut ctx.accounts.new_raffle;
-    let current_raffle = &mut ctx.accounts.current_raffle;
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
     require!(!new_raffle.active, RaffleError::RaffleAlreadyActive);
 
@@ -91,15 +80,9 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
         &thread.to_account_info(),
         &thread_authority.to_account_info(),
         &PAYER_PUBKEY,
-        &current_raffle.to_account_info()
     );
-    // 3 - DETERMINE WINNER
-    let winner_result = select_winner(current_raffle);
-    if winner_result.is_ok() {
-        current_raffle.winner = Some(winner_result.unwrap());
-        msg!("The winner is {:?}", current_raffle.winner);
-    }
-    // 4 - UPDATE THREAD
+
+    // 3 - UPDATE THREAD
     Ok(ThreadResponse {
         dynamic_instruction: Some(new_raffle_ix.into()),
         close_to: None,
@@ -135,15 +118,7 @@ pub struct CreateThread<'info> {
         seeds = [TRACKER_SEED.as_ref()],
         bump = tracker.bump
     )]
-    pub tracker: Account<'info, RaffleTracker>,
-    #[account(
-        seeds = [
-            RAFFLE_SEED.as_ref(),
-            &(tracker.current_raffle).to_le_bytes(),  
-        ],
-        bump = current_raffle.bump
-    )]
-    pub current_raffle: Account<'info, Raffle>,
+    pub tracker: Account<'info, RaffleTracker>
 }
 
 impl<'info> CreateThread<'info> {
@@ -162,17 +137,12 @@ impl<'info> CreateThread<'info> {
     }
 }
 
-
-
-
-
 /// Creates a new thread that will trigger the next raffle when previous raffle ends.
 pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<()> {
     // Get accounts.
     let thread: &SystemAccount = &ctx.accounts.thread;
     let thread_authority = &ctx.accounts.thread_authority;
     let tracker = &ctx.accounts.tracker;
-    let current_raffle = &ctx.accounts.current_raffle;
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
 
     // 1️⃣ Prepare an instruction to be automated.
@@ -182,7 +152,6 @@ pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<(
         &thread.to_account_info(),
         &thread_authority.to_account_info(),
         &PAYER_PUBKEY,
-        &current_raffle.to_account_info()
     );  
 
     // 2️⃣ Define a trigger when tracker is updated.
@@ -197,7 +166,6 @@ pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<(
     let signer_seeds: &[&[&[u8]]] = &[&[THREAD_AUTHORITY_SEED, &[bump]]];
     let cpi_ctx = ctx.accounts.thread_create_ctx(signer_seeds);
     clockwork_sdk::cpi::thread_create(cpi_ctx, LAMPORTS_PER_SOL, thread_id, vec![new_raffle_ix.into()], trigger)?;
-
 
     Ok(())
 }

@@ -9,7 +9,7 @@ import { MadRaffle } from "../target/types/mad_raffle";
 import { COLLECTION_KEYPAIR } from "./helpers/keys";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
-describe("pnft_transfer tests", () => {
+describe("pnft_transfer tests (end raffle 1)", () => {
     // Configure the client to use the local cluster.
     const provider = anchor.AnchorProvider.local();
     anchor.setProvider(provider);

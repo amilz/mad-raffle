@@ -93,6 +93,6 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     )?;
 
     raffle.buy_ticket(&buyer.key);
-
+    msg!("{} bought a raffle ticket to raffle# {}", buyer.key(), raffle.id);
     Ok(())
 }
