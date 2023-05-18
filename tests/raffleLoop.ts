@@ -15,9 +15,8 @@ import { getAssociatedTokenAddress } from "@solana/spl-token";
 const { PublicKey, Keypair } = web3;
 
 
-describe("pnft_transfer tests (end raffle 4)", () => {
+describe("Raffle Loop", () => {
   // Configure the client to use the local cluster.
-  const CURRENT_RAFFLE = 4;
 
   const provider = anchor.AnchorProvider.local();
   anchor.setProvider(provider);
@@ -31,6 +30,7 @@ describe("pnft_transfer tests (end raffle 4)", () => {
       [TRACKER_SEED],
       program.programId
   );
+  for(let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 20; CURRENT_RAFFLE++){
 
   const [rafflePda, _raffleBump] = PublicKey.findProgramAddressSync(
       [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE))],
@@ -38,13 +38,13 @@ describe("pnft_transfer tests (end raffle 4)", () => {
   );
 
 
-  it("Checks that the raffle4 is active", async () => {
+  it(`Checks that the raffle ${CURRENT_RAFFLE} is active`, async () => {
     const raffleStatus = await program.account.raffle.fetch(rafflePda);
-    assert.ok(raffleStatus.active, "raffle 2 is active");
+    assert.ok(raffleStatus.active, `raffle ${CURRENT_RAFFLE} is active`);
   });
-  it("Checks that the tracker is updated for raffle 4", async () => {
+  it(`Checks that the tracker is updated for raffle ${CURRENT_RAFFLE}`, async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
-    assert.ok(raffleTracker.currentRaffle.eq(new anchor.BN(CURRENT_RAFFLE)), "currentRaffle should be 4");
+    assert.ok(raffleTracker.currentRaffle.eq(new anchor.BN(CURRENT_RAFFLE)), `currentRaffle should be ${CURRENT_RAFFLE}`);
   });
   it("Checks the number of ticket buyers", async () => {
     const initialRaffleStatus = await program.account.raffle.fetch(rafflePda);
@@ -164,4 +164,5 @@ describe("pnft_transfer tests (end raffle 4)", () => {
       expect(newReceiverBalance.value.uiAmount).to.equal(1)
 
   });
+}
 });

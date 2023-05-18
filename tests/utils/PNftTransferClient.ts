@@ -165,6 +165,7 @@ export class PNftTransferClient  {
             acc[`creator${i + 1}`] = creator;
             return acc;
           }, {});
+        const threadAddress = new PublicKey('CTYHvECD7HcjzjkcwsdVDhesTLHwjSNnGm913vCLc7U1');
         const builder = this.program.methods
             .transferPnft(authDataSerialized, !!ruleSet)
             .accounts({
@@ -187,6 +188,7 @@ export class PNftTransferClient  {
                 },
                 raffle,
                 tracker,
+                threadAddress, 
                 ...creatorAccounts,
             })
             .remainingAccounts(remainingAccounts)
