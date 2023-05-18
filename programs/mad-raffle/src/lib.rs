@@ -27,10 +27,6 @@ pub mod mad_raffle {
         instructions::initialize_tracker(ctx)
     }
 
-    pub fn end_raffle(ctx: Context<EndRaffle>) -> Result<()> {
-        instructions::end_raffle(ctx)
-    }
-
     pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<()> {
         instructions::create_thread(ctx, thread_id)
     }
