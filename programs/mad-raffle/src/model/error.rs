@@ -14,6 +14,10 @@ pub enum RaffleError {
     InvalidPayer,
     #[msg("Raffle is already active")]
     RaffleAlreadyActive,
+    #[msg("No Raffle Tickets Sold")]
+    NoTickets,
+    #[msg("Error Selecting Winner")]
+    NoWinner
 }
 
 #[error_code]

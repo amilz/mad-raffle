@@ -32,7 +32,7 @@ pub struct CreateRaffle<'info> {
 pub fn create_raffle(ctx: Context<CreateRaffle>) -> Result<()> {
     let raffle = &mut ctx.accounts.raffle;
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
-    tracker.current_raffle += 1;
+    tracker.increment();
 
     raffle.initialize(
         tracker.current_raffle,

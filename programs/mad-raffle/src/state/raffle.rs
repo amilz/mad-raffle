@@ -1,6 +1,6 @@
 use anchor_lang::{prelude::*, InstructionData};
 use solana_program::{pubkey::Pubkey, instruction::Instruction, system_program};
-use crate::{id::ID, constants::{RAFFLE_SEED}};
+use crate::{id::ID, constants::{RAFFLE_SEED}, utils::select_winner};
 
 #[account]
 pub struct RaffleTracker {
@@ -35,6 +35,7 @@ pub struct Raffle {
     pub tickets: Vec<TicketHolder>,
     pub start_time: i64,
     pub end_time: i64,
+    pub winner: Option<Pubkey>
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
@@ -54,7 +55,8 @@ impl Raffle {
         4 + // vec minimium 
         (TicketHolder::get_space() * (ticket_holder_count)) + // tickets
         8 + // start time
-        8 // end time
+        8 +// end time
+        32  // winner
     }
     pub fn initialize(&mut self, raffle_id: u64, bump: u8) {
         self.id = raffle_id;
@@ -68,6 +70,7 @@ impl Raffle {
     pub fn end_raffle(&mut self) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
+        self.select_winner();
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -104,6 +107,18 @@ impl Raffle {
             data: crate::instruction::NextRaffle {}.data(),
         }
     }
+    fn select_winner(&mut self) {
+        match select_winner(self) {
+            Ok(winner) => {
+                self.winner = Some(winner);
+                msg!("The winner is {:?}", self.winner);
+            }
+            Err(e) => {
+                msg!("Error selecting winner: {:?}", e);
+            }
+        }
+    }
+    
 }
 
 impl TicketHolder {

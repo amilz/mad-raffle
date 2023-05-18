@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
-    native_token::LAMPORTS_PER_SOL, system_program,
+    native_token::LAMPORTS_PER_SOL, system_program
 };
 use clockwork_sdk::state::{Thread, ThreadResponse, Trigger};
 use clockwork_sdk::utils::PAYER_PUBKEY;
@@ -63,7 +63,7 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     let thread = &mut ctx.accounts.thread;
     let thread_authority = &mut ctx.accounts.thread_authority;
     let tracker: &mut Account<RaffleTracker> = &mut ctx.accounts.tracker;
-    let new_raffle = &mut ctx.accounts.new_raffle;    
+    let new_raffle = &mut ctx.accounts.new_raffle;
     let (next_raffle_pda, _next_raffle_bump) = tracker.next_raffle_pda();
     require!(!new_raffle.active, RaffleError::RaffleAlreadyActive);
 
@@ -80,8 +80,9 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
         &thread.to_account_info(),
         &thread_authority.to_account_info(),
         &PAYER_PUBKEY,
-    );  
+    );
 
+    // 3 - UPDATE THREAD
     Ok(ThreadResponse {
         dynamic_instruction: Some(new_raffle_ix.into()),
         close_to: None,
@@ -117,7 +118,7 @@ pub struct CreateThread<'info> {
         seeds = [TRACKER_SEED.as_ref()],
         bump = tracker.bump
     )]
-    pub tracker: Account<'info, RaffleTracker> 
+    pub tracker: Account<'info, RaffleTracker>
 }
 
 impl<'info> CreateThread<'info> {
@@ -135,10 +136,6 @@ impl<'info> CreateThread<'info> {
         CpiContext::new_with_signer(program, accounts, signer_seeds)
     }
 }
-
-
-
-
 
 /// Creates a new thread that will trigger the next raffle when previous raffle ends.
 pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<()> {
@@ -169,7 +166,6 @@ pub fn create_thread(ctx: Context<CreateThread>, thread_id: Vec<u8>) -> Result<(
     let signer_seeds: &[&[&[u8]]] = &[&[THREAD_AUTHORITY_SEED, &[bump]]];
     let cpi_ctx = ctx.accounts.thread_create_ctx(signer_seeds);
     clockwork_sdk::cpi::thread_create(cpi_ctx, LAMPORTS_PER_SOL, thread_id, vec![new_raffle_ix.into()], trigger)?;
-
 
     Ok(())
 }

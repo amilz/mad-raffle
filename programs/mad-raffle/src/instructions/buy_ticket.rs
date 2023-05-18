@@ -5,7 +5,7 @@ use solana_program::{system_instruction, pubkey::Pubkey};
 
 use crate::model::RaffleError;
 use crate::state::{Raffle, RaffleTracker};
-use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER};
+use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER, SUPER_RAFFLE_FEE};
 
 #[derive(Accounts)]
 pub struct BuyTicket<'info> {
@@ -62,7 +62,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     let transfer_instruction = system_instruction::transfer(
             buyer.key, 
             &raffle.to_account_info().key, 
-            TICKET_PRICE - TICKET_FEE
+            TICKET_PRICE
     );
 
     anchor_lang::solana_program::program::invoke_signed(
@@ -75,7 +75,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &[],
     )?;
 
-    // Transfer funds to the Raffle Pool
+    // Transfer funds to the Fee Vault
     let fee_transfer_instruction = system_instruction::transfer(
         buyer.key, 
         &fee_vault.to_account_info().key, 
@@ -92,7 +92,26 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &[],
     )?;
 
-    raffle.buy_ticket(&buyer.key);
+    // Transfer funds to the Super Raffle
+    let fee_transfer_instruction = system_instruction::transfer(
+        buyer.key, 
+        &fee_vault.to_account_info().key, 
+        SUPER_RAFFLE_FEE
+    );
 
+    anchor_lang::solana_program::program::invoke_signed(
+        &fee_transfer_instruction,
+        &[
+            buyer.to_account_info(),
+            //TODO replace with super raffle PDA
+            fee_vault.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        ],
+        &[],
+    )?;
+
+
+    raffle.buy_ticket(&buyer.key);
+    msg!("{} bought a raffle ticket to raffle# {}", buyer.key(), raffle.id);
     Ok(())
 }

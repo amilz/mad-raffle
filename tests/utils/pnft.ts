@@ -461,6 +461,7 @@ import {
     collectionVerified,
     programmable = false,
     ruleSetAddr,
+    skipNewCollection = false
   }: {
     provider: AnchorProvider;
     owner?: Keypair;
@@ -471,6 +472,7 @@ import {
     collectionVerified?: boolean;
     programmable?: boolean;
     ruleSetAddr?: PublicKey;
+    skipNewCollection?: boolean;
   }): Promise<{
     mint: PublicKey;
     ata: PublicKey;
@@ -487,7 +489,7 @@ import {
     let metadataAddress, tokenAddress, masterEditionAddress;
 
     //create a verified collection
-    if (collection) {
+    if (collection && !skipNewCollection) {
       await mplex.nfts().create({
         useNewMint: collection,
         tokenOwner: usedOwner.publicKey,
@@ -500,7 +502,7 @@ import {
       }, {commitment: 'finalized'});
   
       if (await mplex.nfts().findByMint({ mintAddress: collection.publicKey })){
-        console.log('collection created')
+        //console.log('collection created')
       } else {
         throw new Error('collection not created')
       }
@@ -526,7 +528,7 @@ import {
         // collectionAuthority: usedOwner,
         tokenStandard: TokenStandard.ProgrammableNonFungible,
       }, {commitment: 'finalized'});
-      console.log('Main NFT Minted: ',newNftTx.response.signature);
+      //console.log('Main NFT Minted: ',newNftTx.response.signature);
       metadataAddress = newNftTx.metadataAddress;
       tokenAddress = newNftTx.tokenAddress;
       masterEditionAddress = newNftTx.masterEditionAddress;
@@ -558,13 +560,13 @@ import {
         }));
     }
     if (collection && collectionVerified) {
-      console.log('verifying collection');
-/*       await mplex.nfts().verifyCollection({
+      /*console.log('verifying collection');
+       await mplex.nfts().verifyCollection({
         mintAddress: usedMint.publicKey,
         collectionMintAddress: collection.publicKey,
         collectionAuthority: usedOwner,
-      }); */
-      console.log('collection verified');
+      }); 
+      console.log('collection verified');*/
     }
   
     // console.log(
