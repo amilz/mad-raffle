@@ -9,7 +9,7 @@ use anchor_spl::{
 use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
 use mpl_token_metadata::{self,processor::AuthorizationData};
 
-use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS};
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS, THREAD_ADDRESS, NEW_RAFFLE_COST};
 use crate::model::{RaffleError, PnftError};
 use crate::state::{Raffle, RaffleTracker};
 use crate::utils::send_pnft;
@@ -103,6 +103,12 @@ pub struct TransferPNFT<'info> {
         bump = raffle.bump
     )]
     pub raffle: Account<'info, Raffle>,
+    /// CHECK: Restricted to the predefined thread address
+    #[account(
+        mut, 
+        address = Pubkey::from_str(THREAD_ADDRESS).unwrap() @ RaffleError::InvalidVault
+    )]
+    pub thread_address: AccountInfo<'info>,
     #[account(
         mut,
         seeds = [TRACKER_SEED.as_ref()],
@@ -247,6 +253,7 @@ pub fn transfer_pnft<'info>(
     let raffle = &mut ctx.accounts.raffle;
     let seller = &mut ctx.accounts.owner;
     let tracker = &mut ctx.accounts.tracker;
+    let thread_address = &mut ctx.accounts.thread_address;
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
 
@@ -267,7 +274,7 @@ pub fn transfer_pnft<'info>(
     // Leave enough lamports in the account to cover rent
     let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() + 1 as usize));
     let current_raffle_lamports: u64 = raffle.to_account_info().lamports();
-    let available_balance: u64 = current_raffle_lamports.saturating_sub(rent_required);
+    let available_balance: u64 = current_raffle_lamports.saturating_sub(rent_required + NEW_RAFFLE_COST);
     let seller_fee_basis_points = metadata.data.seller_fee_basis_points as u64;
     let total_rate: u64 = 10000; // BPS 100% rate
     
@@ -304,8 +311,9 @@ pub fn transfer_pnft<'info>(
         }
     }
     
-    
-    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid;
+    // Raffle pays for the SOL to the NFT seller, royalties to creator, and fees to the thread for next raffle tx's
+    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid + NEW_RAFFLE_COST;
+    **thread_address.to_account_info().try_borrow_mut_lamports()? += NEW_RAFFLE_COST;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
     // TODO Close seller ATA
@@ -313,7 +321,6 @@ pub fn transfer_pnft<'info>(
     raffle.end_raffle();
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);
-
 
     Ok(())
 }
