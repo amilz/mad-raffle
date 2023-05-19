@@ -68,10 +68,7 @@ pub fn next_raffle(ctx:Context<NextRaffle>) -> Result<ThreadResponse> {
     require!(!new_raffle.active, RaffleError::RaffleAlreadyActive);
 
     // 1 - CREATE THE NEW RAFFLE
-    new_raffle.initialize(
-        tracker.current_raffle,
-        *ctx.bumps.get("new_raffle").unwrap(),
-    );
+
 
     // 2 - UPDATE THE DYNAMIC CLOCKWORK THREAD
     let new_raffle_ix = Raffle::new_raffle_instruction(
