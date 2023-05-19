@@ -113,10 +113,10 @@ impl Raffle {
         self.version = Raffle::RAFFLE_VERSION;
         self.bump = bump;
     }
-    pub fn end_raffle(&mut self) {
+    pub fn end_raffle(&mut self, mint: Pubkey) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
-        self.select_winner();
+        self.select_winner(mint);
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -153,8 +153,8 @@ impl Raffle {
             data: crate::instruction::NextRaffle {}.data(),
         }
     }
-    fn select_winner(&mut self) {
-        match select_winner(self) {
+    fn select_winner(&mut self, mint: Pubkey) {
+        match select_winner(self, mint) {
             Ok(winner) => {
                 self.winner = Some(winner);
                 msg!("The winner is {:?}", self.winner);

@@ -328,12 +328,13 @@ pub fn transfer_pnft<'info>(
     
     // Raffle pays for the SOL to the NFT seller, royalties to creator, and fees to the thread for next raffle tx's
     **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid + NEW_RAFFLE_COST;
+    // TODO Make sure Thread amount is appropriate
     **thread_address.to_account_info().try_borrow_mut_lamports()? += NEW_RAFFLE_COST;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
     // TODO Close seller ATA
 
-    raffle.end_raffle();
+    raffle.end_raffle(ctx.accounts.nft_mint.key());
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);
     new_raffle.initialize(

@@ -175,6 +175,6 @@ describe("Raffle Loop", () => {
   }
   it("Logs the scoreboard", async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
-    console.log(raffleTracker.scoreboard);
+    console.log(raffleTracker.scoreboard.map((score) => `${score.user.toString().slice(0,4)}...: ${score.points.toString()}`));
   });
 });
