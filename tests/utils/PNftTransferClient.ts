@@ -126,7 +126,8 @@ export class PNftTransferClient  {
         //receiver, 
         raffle,
         tracker,
-        creators
+        creators,
+        newRaffle
     }: {
         nftMint: PublicKey;
         sourceAta: PublicKey;
@@ -136,6 +137,7 @@ export class PNftTransferClient  {
         raffle: PublicKey;
         tracker: PublicKey;
         creators: PublicKey[];
+        newRaffle: PublicKey;
     }) {
         //pnft
         const {
@@ -187,6 +189,7 @@ export class PNftTransferClient  {
                     instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
                 },
                 raffle,
+                newRaffle,
                 tracker,
                 threadAddress, 
                 ...creatorAccounts,
