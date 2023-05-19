@@ -6,7 +6,7 @@ use crate::state::RaffleTracker;
 #[derive(Accounts)]
 pub struct InitializeTracker<'info> {
     // TODO add an authority lock
-    #[account(init, payer = authority, space = 17, seeds = [TRACKER_SEED.as_ref()], bump)]
+    #[account(init, payer = authority, space = RaffleTracker::get_space(0), seeds = [TRACKER_SEED.as_ref()], bump)]
     pub tracker: Account<'info, RaffleTracker>,
     #[account(mut)]
     pub authority: Signer<'info>, // TODO Add constraint
@@ -19,6 +19,7 @@ pub fn initialize_tracker(ctx: Context<InitializeTracker>) -> Result<()> {
     tracker.set_inner(RaffleTracker {
         current_raffle: 0,
         bump: *ctx.bumps.get("tracker").unwrap(),
+        scoreboard: Vec::new()
     });
     Ok(())
 }

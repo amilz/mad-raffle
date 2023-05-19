@@ -29,7 +29,13 @@ pub const CLOCKWORK_FEE: u64 = 1_000; // 0.000001 SOL in lamports
 pub const NEW_RAFFLE_COST: u64 = 1_500_000;
 
 /// The maximum number of tickets that can be purchased per user.
-pub const MAX_TICKETS_PER_USER: u8 = 255;
+pub const MAX_TICKETS_PER_USER: u8 = 50;
+
+/// The number of points per ticket.
+pub const POINTS_PER_TICKET: u32 = 1;
+
+/// The number of points for selling.
+pub const POINTS_FOR_SELLING: u32 = 10;
 
 /// Collection Address
 pub const COLLECTION_ADDRESS: &str = "CLxN2mQsewGLsTKw3gML1AWFQjrWpG6WgLYTLX9BdhRp";

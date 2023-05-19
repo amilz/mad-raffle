@@ -5,7 +5,7 @@ use solana_program::{system_instruction, pubkey::Pubkey};
 
 use crate::model::RaffleError;
 use crate::state::{Raffle, RaffleTracker};
-use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER, SUPER_RAFFLE_FEE};
+use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER, SUPER_RAFFLE_FEE, POINTS_PER_TICKET};
 
 #[derive(Accounts)]
 pub struct BuyTicket<'info> {
@@ -31,8 +31,12 @@ pub struct BuyTicket<'info> {
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     #[account(
+        mut,
         seeds = [TRACKER_SEED.as_ref()],
-        bump = tracker.bump
+        bump = tracker.bump,
+        realloc = RaffleTracker::get_space((tracker.scoreboard.len() + 1 ) as usize),
+        realloc::payer = buyer,
+        realloc::zero = false
     )]
     pub tracker: Account<'info, RaffleTracker> 
 }
@@ -41,7 +45,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     let raffle = &mut ctx.accounts.raffle;
     let buyer = &ctx.accounts.buyer;
     let fee_vault = &ctx.accounts.fee_vault;
-
+    let tracker = &mut ctx.accounts.tracker;
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
 /*     let current_time = Clock::get().unwrap().unix_timestamp;
@@ -94,7 +98,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
 
     // Transfer funds to the Super Raffle
     let fee_transfer_instruction = system_instruction::transfer(
-        buyer.key, 
+        buyer.key,
         &fee_vault.to_account_info().key, 
         SUPER_RAFFLE_FEE
     );
@@ -110,8 +114,9 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &[],
     )?;
 
-
     raffle.buy_ticket(&buyer.key);
+    tracker.add_points(&buyer.key, POINTS_PER_TICKET);
+
     msg!("{} bought a raffle ticket to raffle# {}", buyer.key(), raffle.id);
     Ok(())
 }
