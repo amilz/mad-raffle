@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum RaffleError {
     #[msg("Selected raffle is not active")]
     NotActive,
+    #[msg("Selected raffle is still active")]
+    StillActive,
     #[msg("Invalid vault account")]
     InvalidVault,
     #[msg("Raffle has already closed")]
@@ -15,7 +17,11 @@ pub enum RaffleError {
     #[msg("No Raffle Tickets Sold")]
     NoTickets,
     #[msg("Error Selecting Winner")]
-    NoWinner
+    NoWinner,
+    #[msg("UNAUTHORIZED")]
+    UnauthorizedSigner,
+    #[msg("Winner already selected")]
+    WinnerAlreadySelected,
 }
 
 #[error_code]

@@ -113,10 +113,9 @@ impl Raffle {
         self.version = Raffle::RAFFLE_VERSION;
         self.bump = bump;
     }
-    pub fn end_raffle(&mut self, mint: Pubkey) {
+    pub fn end_raffle(&mut self) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
-        self.select_winner(mint);
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -131,8 +130,8 @@ impl Raffle {
             }),
         }
     }
-    fn select_winner(&mut self, mint: Pubkey) {
-        match select_winner(self, mint) {
+    pub fn select_winner(&mut self, random: Pubkey) {
+        match select_winner(self, random) {
             Ok(winner) => {
                 self.winner = Some(winner);
                 msg!("The winner is {:?}", self.winner);

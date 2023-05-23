@@ -262,9 +262,10 @@ pub fn end_raffle<'info>(
     let seller = &mut ctx.accounts.owner;
     let tracker = &mut ctx.accounts.tracker;
     let new_raffle = &mut ctx.accounts.new_raffle;
-    // Verify raffle is active
+    // Verify raffle is active and has sold some tickets
+    let total_tickets: u32 = raffle.tickets.iter().map(|holder| holder.qty as u32).sum();
     require!(raffle.active, RaffleError::NotActive);
-
+    require!(total_tickets > 0, RaffleError::NoTickets);
 
     let metadata = &mut ctx.accounts.nft_metadata;
     let empty_vec = vec![];
@@ -325,7 +326,7 @@ pub fn end_raffle<'info>(
 
     // TODO Close seller ATA
 
-    raffle.end_raffle(ctx.accounts.nft_mint.key());
+    raffle.end_raffle();
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);
     new_raffle.initialize(

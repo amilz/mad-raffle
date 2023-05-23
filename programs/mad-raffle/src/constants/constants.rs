@@ -7,7 +7,7 @@ pub const FEE_VAULT: &str = "VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6";
 
 /// This is the authority to initiatialize stuff.
 /// TODO Update for production
-pub const AUTHORITY: &str = "TBD";
+pub const AUTHORITY: &str = "AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy";
 
 /// The current version of the Raffle account.
 const _RENT_ADDITION: u64 = 1_120_560; // amount for + rent of 33 bytes

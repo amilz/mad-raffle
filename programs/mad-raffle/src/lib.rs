@@ -33,5 +33,9 @@ pub mod mad_raffle {
     ) -> Result<()> {
         instructions::end_raffle(ctx, authorization_data, rules_acc_present)
     }
+
+    pub fn select_winner(ctx: Context<SelectWinner>, _raffle_id: u64) -> Result<()> {
+        instructions::select_winner(ctx)
+    }
     
 }
