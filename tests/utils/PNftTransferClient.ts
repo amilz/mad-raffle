@@ -169,7 +169,7 @@ export class PNftTransferClient  {
           }, {});
         const threadAddress = new PublicKey('CTYHvECD7HcjzjkcwsdVDhesTLHwjSNnGm913vCLc7U1');
         const builder = this.program.methods
-            .transferPnft(authDataSerialized, !!ruleSet)
+            .endRaffle(authDataSerialized, !!ruleSet)
             .accounts({
                 owner,
                 src: sourceAta,
@@ -191,7 +191,6 @@ export class PNftTransferClient  {
                 raffle,
                 newRaffle,
                 tracker,
-                threadAddress, 
                 ...creatorAccounts,
             })
             .remainingAccounts(remainingAccounts)

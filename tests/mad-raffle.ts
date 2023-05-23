@@ -6,7 +6,7 @@ import { MadRaffle } from "../target/types/mad_raffle";
 import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
 
-const { PublicKey, Keypair } = web3;
+const { PublicKey } = web3;
 
 const CURRENT_RAFFLE = 1;
 

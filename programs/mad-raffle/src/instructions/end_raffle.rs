@@ -15,7 +15,7 @@ use crate::state::{Raffle, RaffleTracker};
 use crate::utils::send_pnft;
 
 #[derive(Accounts)]
-pub struct TransferPNFT<'info> {
+pub struct EndRaffle<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut)]
@@ -226,8 +226,8 @@ impl From<ProofInfoLocal> for ProofInfo {
     }
 }
 
-pub fn transfer_pnft<'info>(
-    ctx: Context<'_, '_, '_, 'info, TransferPNFT<'info>>,
+pub fn end_raffle<'info>(
+    ctx: Context<'_, '_, '_, 'info, EndRaffle<'info>>,
     authorization_data: Option<AuthorizationDataLocal>,
     rules_acc_present: bool,
 ) -> Result<()> {
