@@ -10,8 +10,6 @@ pub enum RaffleError {
     RaffleClosed,
     #[msg("Max tickets per user exceeded")]
     MaxTicketsPerUserExceeded,
-    #[msg("Invalid payer. Must use Clockwork")]
-    InvalidPayer,
     #[msg("Raffle is already active")]
     RaffleAlreadyActive,
     #[msg("No Raffle Tickets Sold")]

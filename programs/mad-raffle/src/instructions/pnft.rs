@@ -9,7 +9,7 @@ use anchor_spl::{
 use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
 use mpl_token_metadata::{self,processor::AuthorizationData};
 
-use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS, THREAD_ADDRESS, NEW_RAFFLE_COST, POINTS_FOR_SELLING};
+use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS, NEW_RAFFLE_COST, POINTS_FOR_SELLING};
 use crate::model::{RaffleError, PnftError};
 use crate::state::{Raffle, RaffleTracker};
 use crate::utils::send_pnft;
@@ -102,7 +102,7 @@ pub struct TransferPNFT<'info> {
         ],
         bump = raffle.bump
     )]
-    pub raffle: Account<'info, Raffle>,
+    pub raffle: Box<Account<'info, Raffle>>,
     #[account(
         init, 
         payer = owner, 
@@ -113,13 +113,7 @@ pub struct TransferPNFT<'info> {
         ],
         bump
     )]
-    pub new_raffle: Account<'info, Raffle>,
-    /// CHECK: Restricted to the predefined thread address
-    #[account(
-        mut, 
-        address = Pubkey::from_str(THREAD_ADDRESS).unwrap() @ RaffleError::InvalidVault
-    )]
-    pub thread_address: AccountInfo<'info>,
+    pub new_raffle: Box<Account<'info, Raffle>>,
     #[account(
         mut,
         seeds = [TRACKER_SEED.as_ref()],
@@ -128,7 +122,7 @@ pub struct TransferPNFT<'info> {
         realloc::payer = owner,
         realloc::zero = false
     )]
-    pub tracker: Account<'info, RaffleTracker>,
+    pub tracker: Box<Account<'info, RaffleTracker>>,
     #[account(mut)]
     pub creator1: Option<AccountInfo<'info>>,
     #[account(mut)]
@@ -267,7 +261,6 @@ pub fn transfer_pnft<'info>(
     let raffle = &mut ctx.accounts.raffle;
     let seller = &mut ctx.accounts.owner;
     let tracker = &mut ctx.accounts.tracker;
-    let thread_address = &mut ctx.accounts.thread_address;
     let new_raffle = &mut ctx.accounts.new_raffle;
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
@@ -326,10 +319,8 @@ pub fn transfer_pnft<'info>(
         }
     }
     
-    // Raffle pays for the SOL to the NFT seller, royalties to creator, and fees to the thread for next raffle tx's
-    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid + NEW_RAFFLE_COST;
-    // TODO Make sure Thread amount is appropriate
-    **thread_address.to_account_info().try_borrow_mut_lamports()? += NEW_RAFFLE_COST;
+    // Raffle pays for the SOL to the NFT seller, royalties to creator
+    **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
     // TODO Close seller ATA

@@ -1,5 +1,5 @@
-use anchor_lang::{prelude::*, InstructionData};
-use solana_program::{pubkey::Pubkey, instruction::Instruction, system_program};
+use anchor_lang::{prelude::*};
+use solana_program::{pubkey::Pubkey};
 use crate::{id::ID, constants::{RAFFLE_SEED}, utils::select_winner};
 
 #[account]
@@ -129,28 +129,6 @@ impl Raffle {
                 user: *buyer,
                 qty: 1,
             }),
-        }
-    }
-    pub fn new_raffle_instruction(
-        next_raffle_pda: &Pubkey,
-        tracker: &AccountInfo,
-        thread: &AccountInfo,
-        thread_authority: &AccountInfo,
-        payer_pubkey: &Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id: ID,
-            accounts: crate::accounts::NextRaffle {
-                new_raffle: *next_raffle_pda,
-                tracker: tracker.key(),
-                thread: thread.key(),
-                thread_authority: thread_authority.key(),
-                system_program: system_program::id(),
-                clockwork_program: clockwork_sdk::ID,
-                payer: *payer_pubkey,
-            }
-            .to_account_metas(Some(true)),
-            data: crate::instruction::NextRaffle {}.data(),
         }
     }
     fn select_winner(&mut self, mint: Pubkey) {

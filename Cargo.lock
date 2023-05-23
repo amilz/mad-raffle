@@ -205,7 +205,7 @@ checksum = "11cb31fe143aedb36fc41409ea072aa0b840cbea727e62eb2ff6e7b6cea036ff"
 dependencies = [
  "anyhow",
  "bs58 0.3.1",
- "heck 0.3.3",
+ "heck",
  "proc-macro2",
  "quote",
  "serde",
@@ -566,126 +566,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "clockwork-anchor-gen"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf7bb5c1101a261455e32d9017be20f2202eb4e09aae0497e30a20915f4ebc9a"
-dependencies = [
- "clockwork-anchor-generate-cpi-crate",
- "clockwork-anchor-generate-cpi-interface",
-]
-
-[[package]]
-name = "clockwork-anchor-generate-cpi-crate"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa2ea8df18090fea5be162c5ebe57569af47692fae626424160d14460d7ed95b"
-dependencies = [
- "clockwork-anchor-idl",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "clockwork-anchor-generate-cpi-interface"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e601b4b0b6f2e78d8502996b900fce5811ecf1479f84a07e3fb80fcd38117e8"
-dependencies = [
- "clockwork-anchor-idl",
- "darling",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "clockwork-anchor-idl"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a949f478bf927b4d61cd0a1be78d9c6fd07361a25e327966b06d1cdc342ff839"
-dependencies = [
- "anchor-syn",
- "darling",
- "heck 0.4.1",
- "proc-macro2",
- "quote",
- "serde_json",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "clockwork-cron"
-version = "2.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5083579685b1597a13ef899d0601557b0b296b9078e8d1b6622c8a2a8bfbbfb8"
-dependencies = [
- "chrono",
- "nom",
- "once_cell",
-]
-
-[[package]]
-name = "clockwork-network-program"
-version = "2.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f73bd69a1b07996f4577222eabf749ded2f84feea53adc7546f0aaf78a3f4e9a"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "clockwork-utils",
-]
-
-[[package]]
-name = "clockwork-sdk"
-version = "2.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3af61997f1af7a657f122e3120af53c97ca0959a457a4022081bacc48c4b800"
-dependencies = [
- "anchor-lang",
- "chrono",
- "clockwork-thread-program",
- "nom",
- "once_cell",
-]
-
-[[package]]
-name = "clockwork-thread-program"
-version = "2.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0620cd834ce70bab309ec2949bd3d4fb8bf06ecce7e9a7f66e1de50e0c1da43"
-dependencies = [
- "anchor-lang",
- "chrono",
- "clockwork-cron",
- "clockwork-network-program",
- "clockwork-thread-program-v1",
- "clockwork-utils",
- "static-pubkey",
- "version",
-]
-
-[[package]]
-name = "clockwork-thread-program-v1"
-version = "1.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5bf9f9dbfc33c25a91403d98db88e7a06cd8a7898c33960848565d0e4a7f196"
-dependencies = [
- "anchor-lang",
- "clockwork-anchor-gen",
-]
-
-[[package]]
-name = "clockwork-utils"
-version = "2.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a4351e52435ad14fa26a2ee7836e141f0545bf23f65af761f03e1940a3c6044"
-dependencies = [
- "anchor-lang",
- "base64 0.13.1",
- "serde",
- "serde_json",
- "static-pubkey",
-]
-
-[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1015,12 +895,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "heck"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1242,11 +1116,11 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "clockwork-sdk",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
  "solana-program",
  "thiserror",
+ "winnow",
 ]
 
 [[package]]
@@ -1284,12 +1158,6 @@ dependencies = [
  "rand_core 0.6.4",
  "zeroize",
 ]
-
-[[package]]
-name = "minimal-lexical"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "mpl-token-auth-rules"
@@ -1349,16 +1217,6 @@ dependencies = [
  "borsh",
  "solana-program",
  "spl-token",
-]
-
-[[package]]
-name = "nom"
-version = "7.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
-dependencies = [
- "memchr",
- "minimal-lexical",
 ]
 
 [[package]]
@@ -2236,18 +2094,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "static-pubkey"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0547d5945c93f55e1b18bf2a67d1a3d0548561f2687645b22c1c1d4fbb9a8e90"
-dependencies = [
- "bs58 0.4.0",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2422,12 +2268,6 @@ dependencies = [
  "fnv",
  "lazy_static",
 ]
-
-[[package]]
-name = "version"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a449064fee414fcc201356a3e6c1510f6c8829ed28bb06b91c54ebe208ce065"
 
 [[package]]
 name = "version_check"

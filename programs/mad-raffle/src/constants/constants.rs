@@ -2,12 +2,11 @@
 pub const NATIVE_MINT: &str = "So11111111111111111111111111111111111111112";
 
 /// Fee Vault 
+/// TODO Update for production
 pub const FEE_VAULT: &str = "VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6";
 
-/// Thread
-pub const THREAD_ADDRESS: &str = "CTYHvECD7HcjzjkcwsdVDhesTLHwjSNnGm913vCLc7U1";
-
 /// This is the authority to initiatialize stuff.
+/// TODO Update for production
 pub const AUTHORITY: &str = "TBD";
 
 /// The current version of the Raffle account.
@@ -22,10 +21,7 @@ pub const TICKET_FEE: u64 = 20_000_000; // 0.02 SOL in lamports
 /// The current fee collected per ticket.
 pub const SUPER_RAFFLE_FEE: u64 = 10_000_000; // 0.01 SOL in lamports
 
-/// The threadwork fee per execution.
-pub const CLOCKWORK_FEE: u64 = 1_000; // 0.000001 SOL in lamports
-
-/// The thread's cost per new raffle (inclusive of Clockwork fee & rounded up)
+/// The  cost per new raffle (rounded up)
 pub const NEW_RAFFLE_COST: u64 = 1_500_000;
 
 /// The maximum number of tickets that can be purchased per user.

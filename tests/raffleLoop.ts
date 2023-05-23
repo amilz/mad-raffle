@@ -1,12 +1,9 @@
 import * as anchor from "@project-serum/anchor";
-import { web3, Program, workspace } from '@project-serum/anchor';
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { web3 } from '@project-serum/anchor';
 import { assert } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
-import { raffleNumberBuffer, RAFFLE_SEED, THREAD_AUTHORITY_SEED, TRACKER_SEED } from "./helpers/seeds";
-import { ClockworkProvider } from "@clockwork-xyz/sdk";
-import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
+import { VAULT_KEYPAIR } from "./helpers/keys";
 import { expect } from "chai";
 import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthorizationRules } from "./utils/pnft";
 import { PNftTransferClient } from './utils/PNftTransferClient';
@@ -30,7 +27,7 @@ describe("Raffle Loop", () => {
     [TRACKER_SEED],
     program.programId
   );
-  for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 5; CURRENT_RAFFLE++) {
+  for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 20; CURRENT_RAFFLE++) {
 
     const [rafflePda, _raffleBump] = PublicKey.findProgramAddressSync(
       [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE))],
