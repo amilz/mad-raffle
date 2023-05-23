@@ -1,11 +1,24 @@
-use anchor_lang::{prelude::*, InstructionData};
-use solana_program::{pubkey::Pubkey, instruction::Instruction, system_program};
+use anchor_lang::{prelude::*};
+use solana_program::{pubkey::Pubkey};
 use crate::{id::ID, constants::{RAFFLE_SEED}, utils::select_winner};
 
 #[account]
 pub struct RaffleTracker {
     pub current_raffle: u64,
     pub bump: u8,
+    pub scoreboard: Vec<UserPoints>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+pub struct UserPoints {
+    pub user: Pubkey,
+    pub points: u32,
+}
+impl UserPoints {
+    pub fn get_space() -> usize {
+        32 + // user (Pubkey)
+        4 // qty (u32)
+    }
 }
 
 impl RaffleTracker {
@@ -23,6 +36,39 @@ impl RaffleTracker {
     }
     pub fn increment(&mut self) {
         self.current_raffle += 1;
+    }
+    pub fn get_space(user_score_count: usize) -> usize {
+        8 + // discriminator
+        8 + // tracker
+        1 + // bump
+        4 + // min vec space
+        (UserPoints::get_space() * (user_score_count)) // tickets
+    }
+    pub fn add_points(&mut self, user: &Pubkey, num_points: u32) {
+        let multiplier = self.calculate_multiplier();
+        let points_to_add = num_points * multiplier;
+
+        match self
+            .scoreboard
+            .iter_mut()
+            .find(|score: &&mut UserPoints| score.user == *user)
+        {
+            Some(user) => user.points += points_to_add,
+            None => self.scoreboard.push(UserPoints {
+                user: *user,
+                points: points_to_add,
+            }),
+        }
+        msg!("Added {} points to {}", points_to_add, user);        
+    }
+    // Bonus multiplier for points, rewards early participants
+    fn calculate_multiplier(&self) -> u32 {
+        if self.current_raffle < 100 {
+            // calculate linear decrease from 10 to 1 over rounds 1 to 99
+            10 - ((self.current_raffle - 1) * 9 / 99) as u32
+        } else {
+            1
+        }
     }
 }
 
@@ -67,10 +113,10 @@ impl Raffle {
         self.version = Raffle::RAFFLE_VERSION;
         self.bump = bump;
     }
-    pub fn end_raffle(&mut self) {
+    pub fn end_raffle(&mut self, mint: Pubkey) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
-        self.select_winner();
+        self.select_winner(mint);
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -85,30 +131,8 @@ impl Raffle {
             }),
         }
     }
-    pub fn new_raffle_instruction(
-        next_raffle_pda: &Pubkey,
-        tracker: &AccountInfo,
-        thread: &AccountInfo,
-        thread_authority: &AccountInfo,
-        payer_pubkey: &Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id: ID,
-            accounts: crate::accounts::NextRaffle {
-                new_raffle: *next_raffle_pda,
-                tracker: tracker.key(),
-                thread: thread.key(),
-                thread_authority: thread_authority.key(),
-                system_program: system_program::id(),
-                clockwork_program: clockwork_sdk::ID,
-                payer: *payer_pubkey,
-            }
-            .to_account_metas(Some(true)),
-            data: crate::instruction::NextRaffle {}.data(),
-        }
-    }
-    fn select_winner(&mut self) {
-        match select_winner(self) {
+    fn select_winner(&mut self, mint: Pubkey) {
+        match select_winner(self, mint) {
             Ok(winner) => {
                 self.winner = Some(winner);
                 msg!("The winner is {:?}", self.winner);

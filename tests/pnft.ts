@@ -29,6 +29,10 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE))],
         program.programId
     );
+    const [newRafflePda, _newRaffleBump] = PublicKey.findProgramAddressSync(
+        [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE + 1))],
+        program.programId
+    );
 
 /*     it('transfers pnft to another account (no ruleset)', async () => {
 
@@ -124,6 +128,7 @@ describe("pnft_transfer tests (end raffle 1)", () => {
             owner: nftOwner.publicKey,
             tracker: trackerPda,
             raffle: rafflePda,
+            newRaffle: newRafflePda,
             creators: creators.map(creator=>creator.address),
         })
         await buildAndSendTx({
