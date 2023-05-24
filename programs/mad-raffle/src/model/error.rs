@@ -22,6 +22,8 @@ pub enum RaffleError {
     UnauthorizedSigner,
     #[msg("Winner already selected")]
     WinnerAlreadySelected,
+    #[msg("Winner not yet selected")]
+    WinnerNotSelected,
 }
 
 #[error_code]

@@ -81,7 +81,14 @@ pub struct Raffle {
     pub tickets: Vec<TicketHolder>,
     pub start_time: i64,
     pub end_time: i64,
+    pub prize: Option<Prize>,
     pub winner: Option<Pubkey>
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+pub struct Prize {
+    pub mint: Pubkey,
+    pub ata: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
@@ -101,7 +108,10 @@ impl Raffle {
         4 + // vec minimium 
         (TicketHolder::get_space() * (ticket_holder_count)) + // tickets
         8 + // start time
-        8 +// end time
+        8 + // end time
+        1 + // option
+        (Prize::get_space()) + // prize
+        1 + // option
         32  // winner
     }
     pub fn initialize(&mut self, raffle_id: u64, bump: u8) {
@@ -113,9 +123,13 @@ impl Raffle {
         self.version = Raffle::RAFFLE_VERSION;
         self.bump = bump;
     }
-    pub fn end_raffle(&mut self) {
+    pub fn end_raffle(&mut self, mint: Pubkey, ata: Pubkey) {
         self.active = false;
         self.end_time = Clock::get().unwrap().unix_timestamp;
+        self.prize = Some(Prize {
+            mint,
+            ata,
+        });
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
         match self
@@ -148,5 +162,12 @@ impl TicketHolder {
     pub fn get_space() -> usize {
         32 + // user (Pubkey)
         1 // qty (u8)
+    }
+}
+
+impl Prize {
+    pub fn get_space() -> usize {
+        32 + // mint (Pubkey)
+        32   // ata (Pubkey)
     }
 }

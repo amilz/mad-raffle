@@ -262,6 +262,8 @@ pub fn end_raffle<'info>(
     let seller = &mut ctx.accounts.owner;
     let tracker = &mut ctx.accounts.tracker;
     let new_raffle = &mut ctx.accounts.new_raffle;
+    let nft_mint = &ctx.accounts.nft_mint;
+    let ata = &ctx.accounts.dest;
     // Verify raffle is active and has sold some tickets
     let total_tickets: u32 = raffle.tickets.iter().map(|holder| holder.qty as u32).sum();
     require!(raffle.active, RaffleError::NotActive);
@@ -324,15 +326,19 @@ pub fn end_raffle<'info>(
     **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
-    // TODO Close seller ATA
-
-    raffle.end_raffle();
+    // Update raffle state
+    raffle.end_raffle(
+        nft_mint.key(),
+        ata.key()
+    );
+    // Increment the raffle counter and initialize the new raffle
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);
     new_raffle.initialize(
         tracker.current_raffle,
         *ctx.bumps.get("new_raffle").unwrap(),
     );
+    // Add bonus points to the seller
     tracker.add_points(&seller.key, POINTS_FOR_SELLING);
 
     Ok(())

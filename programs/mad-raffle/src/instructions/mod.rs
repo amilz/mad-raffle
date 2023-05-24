@@ -12,3 +12,6 @@ pub use end_raffle::*;
 
 pub mod select_winner;
 pub use select_winner::*;
+
+pub mod distribute_prize;
+pub use distribute_prize::*;
