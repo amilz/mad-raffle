@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 use anchor_spl::metadata::MetadataAccount;
+use anchor_spl::token::{CloseAccount, self};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
@@ -9,7 +10,7 @@ use anchor_spl::{
 
 use crate::constants::{RAFFLE_SEED, COLLECTION_ADDRESS, AUTHORITY};
 use crate::model::{RaffleError, PnftError, PrizeError};
-use crate::state::{Raffle};
+use crate::state::Raffle;
 use crate::utils::{send_pnft, AuthorizationDataLocal};
 
 #[derive(Accounts)]
@@ -28,7 +29,6 @@ pub struct DistributePrize<'info> {
     pub winner: SystemAccount<'info>,
     #[account(
         mut,
-        //close = authority, //TODO(amilz) add close instruction
         associated_token::mint = nft_mint,
         associated_token::authority = raffle,
     )]
@@ -163,6 +163,26 @@ pub fn distribute_prize<'info>(
     if let Some(prize) = &mut ctx.accounts.raffle.prize {
         prize.sent = true;
     }
+
+    // Close the Raffle's token account
+    let raffle = &mut ctx.accounts.raffle;
+    let num_raffle_bytes = &(raffle.id).to_le_bytes();
+    let bump = &[raffle.bump];
+    // Should match raffle pda
+    let signer_seeds: &[&[&[u8]]] = &[&[
+        RAFFLE_SEED.as_ref(),
+        num_raffle_bytes,
+        bump,
+    ]];
+    let close_context = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        CloseAccount {
+            account: ctx.accounts.src.to_account_info(),
+            destination: ctx.accounts.authority.to_account_info(),
+            authority: ctx.accounts.raffle.to_account_info(),
+        } 
+    );
+    token::close_account(close_context.with_signer(signer_seeds))?;
 
     Ok(())
 }
