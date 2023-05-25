@@ -168,18 +168,45 @@ describe("Raffle Loop", () => {
     });
     it('selects a winner', async () => {
       const tx = await program.methods.selectWinner(new anchor.BN(CURRENT_RAFFLE))
-      .accounts({
-        raffle: rafflePda,
-        authority: AUTH_KEYPAIR.publicKey,
-        random: Keypair.generate().publicKey,
+        .accounts({
+          raffle: rafflePda,
+          authority: AUTH_KEYPAIR.publicKey,
+          random: Keypair.generate().publicKey,
+        })
+        .signers([AUTH_KEYPAIR])
+        .transaction();
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      tx.feePayer = AUTH_KEYPAIR.publicKey;
+      tx.recentBlockhash = blockhash;
+      tx.lastValidBlockHeight = lastValidBlockHeight;
+      await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+    });
+    it('sends prize', async () => {
+      const raffleStatus = await program.account.raffle.fetch(rafflePda);
+      const { winner } = raffleStatus;
+      const { mint, ata } = raffleStatus.prize;
+
+      let destAta = await getAssociatedTokenAddress(mint, winner);
+
+      const builder = await pNftTransferClient.buildDistributePNFT({
+          authority: AUTH_KEYPAIR.publicKey,
+          winner,
+          sourceAta: ata,
+          nftMint: mint,
+          destAta: destAta,
+          raffle: rafflePda,
+          raffleId: new anchor.BN(CURRENT_RAFFLE),
       })
-      .signers([AUTH_KEYPAIR])
-      .transaction();
-    let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-    tx.feePayer = AUTH_KEYPAIR.publicKey;
-    tx.recentBlockhash = blockhash;
-    tx.lastValidBlockHeight = lastValidBlockHeight;
-    await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+      await buildAndSendTx({
+          provider,
+          ixs: [await builder.instruction()],
+          extraSigners: [AUTH_KEYPAIR],
+      });
+
+      const winnerBalance = await provider.connection.getTokenAccountBalance(destAta);
+      const postRaffleStatus = await program.account.raffle.fetch(rafflePda);
+      expect(postRaffleStatus.prize.sent).to.equal(true);
+      expect(winnerBalance.value.uiAmount).to.equal(1);
   });
 
 
@@ -187,6 +214,6 @@ describe("Raffle Loop", () => {
   }
   it("Logs the scoreboard", async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
-    console.log(raffleTracker.scoreboard.map((score) => `${score.user.toString().slice(0,4)}...: ${score.points.toString()}`));
+    console.log(raffleTracker.scoreboard.map((score) => `${score.user.toString().slice(0, 4)}...: ${score.points.toString()}`));
   });
 });
