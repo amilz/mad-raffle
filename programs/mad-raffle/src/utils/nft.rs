@@ -1,13 +1,20 @@
-use anchor_spl::{token::{TokenAccount, Mint, Token}, metadata::MetadataAccount, associated_token::AssociatedToken};
-use mpl_token_metadata::{instruction::{builders::TransferBuilder, TransferArgs, InstructionBuilder}, state::{TokenStandard, Metadata, TokenMetadataAccount, ProgrammableConfig::V1}, processor::AuthorizationData};
-use solana_program::program::invoke;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    metadata::MetadataAccount,
+    token::{Mint, Token, TokenAccount},
+};
+use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
+use mpl_token_metadata::{
+    instruction::{builders::TransferBuilder, InstructionBuilder, TransferArgs},
+    processor::AuthorizationData,
+    state::{Metadata, ProgrammableConfig::V1, TokenMetadataAccount, TokenStandard},
+};
+use solana_program::program::{invoke, invoke_signed};
 
-
-use crate::{*, model::PnftError};
+use crate::{constants::RAFFLE_SEED, model::PnftError, state::Raffle, *};
 
 #[allow(clippy::too_many_arguments)]
 pub fn send_pnft<'info>(
-
     authority_and_owner: &AccountInfo<'info>,
     //(!) payer can't carry data, has to be a normal KP:
     // https://github.com/solana-labs/solana/blob/bda0c606a19ce1cc44b5ab638ff0b993f612e76c/runtime/src/system_instruction_processor.rs#L197
@@ -16,7 +23,7 @@ pub fn send_pnft<'info>(
     dest_ata: &Account<'info, TokenAccount>,
     dest_owner: &AccountInfo<'info>,
     nft_mint: &Account<'info, Mint>,
-    nft_metadata: &Account<'info,MetadataAccount>,
+    nft_metadata: &Account<'info, MetadataAccount>,
     nft_edition: &UncheckedAccount<'info>,
     system_program: &Program<'info, System>,
     token_program: &Program<'info, Token>,
@@ -28,7 +35,7 @@ pub fn send_pnft<'info>(
     rules_acc: Option<&AccountInfo<'info>>,
     authorization_data: Option<AuthorizationDataLocal>,
     //if passed, use signed_invoke() instead of invoke()
-    // program_signer: Option<&Account<'info, TSwap>>,
+    program_signer: Option<&Account<'info, Raffle>>,
 ) -> Result<()> {
     let mut builder = TransferBuilder::new();
 
@@ -121,19 +128,28 @@ pub fn send_pnft<'info>(
 
     let transfer_ix = builder
         .build(TransferArgs::V1 {
-            amount: 1, //currently 1 only
+            amount: 1,
             authorization_data: authorization_data
                 .map(|authorization_data| AuthorizationData::try_from(authorization_data).unwrap()),
         })
         .unwrap()
         .instruction();
 
-    // if let Some(vault) = program_signer {
-    //     invoke_signed(&transfer_ix, &account_infos, &[&program_signer.seeds()])?;
-    // } else {
-    //     invoke(&transfer_ix, &account_infos)?;
-    // }
-    invoke(&transfer_ix, &account_infos)?;
+    if let Some(program_signer) = program_signer {
+        msg!("signed invoke triggered");
+        let raffle = program_signer.clone();
+        let num_raffle_bytes = &(raffle.id).to_le_bytes();
+        let bump = &[raffle.bump];
+        // Should match raffle pda
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            RAFFLE_SEED.as_ref(),
+            num_raffle_bytes,
+            bump,
+        ]];
+        invoke_signed(&transfer_ix, &account_infos, signer_seeds)?;
+    } else {
+        invoke(&transfer_ix, &account_infos)?;
+    }
 
     Ok(())
 }
@@ -160,4 +176,76 @@ pub fn assert_decode_metadata<'info>(
     }
 
     Ok(Metadata::from_account_info(metadata_account)?)
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct AuthorizationDataLocal {
+    pub payload: Vec<TaggedPayload>,
+}
+impl From<AuthorizationDataLocal> for AuthorizationData {
+    fn from(val: AuthorizationDataLocal) -> Self {
+        let mut p = Payload::new();
+        val.payload.into_iter().for_each(|tp| {
+            p.insert(tp.name, PayloadType::try_from(tp.payload).unwrap());
+        });
+        AuthorizationData { payload: p }
+    }
+}
+
+//Unfortunately anchor doesn't like HashMaps, nor Tuples, so you can't pass in:
+// HashMap<String, PayloadType>, nor
+// Vec<(String, PayloadTypeLocal)>
+// so have to create this stupid temp struct for IDL to serialize correctly
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct TaggedPayload {
+    name: String,
+    payload: PayloadTypeLocal,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub enum PayloadTypeLocal {
+    /// A plain `Pubkey`.
+    Pubkey(Pubkey),
+    /// PDA derivation seeds.
+    Seeds(SeedsVecLocal),
+    /// A merkle proof.
+    MerkleProof(ProofInfoLocal),
+    /// A plain `u64` used for `Amount`.
+    Number(u64),
+}
+impl From<PayloadTypeLocal> for PayloadType {
+    fn from(val: PayloadTypeLocal) -> Self {
+        match val {
+            PayloadTypeLocal::Pubkey(pubkey) => PayloadType::Pubkey(pubkey),
+            PayloadTypeLocal::Seeds(seeds) => {
+                PayloadType::Seeds(SeedsVec::try_from(seeds).unwrap())
+            }
+            PayloadTypeLocal::MerkleProof(proof) => {
+                PayloadType::MerkleProof(ProofInfo::try_from(proof).unwrap())
+            }
+            PayloadTypeLocal::Number(number) => PayloadType::Number(number),
+        }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct SeedsVecLocal {
+    /// The vector of derivation seeds.
+    pub seeds: Vec<Vec<u8>>,
+}
+impl From<SeedsVecLocal> for SeedsVec {
+    fn from(val: SeedsVecLocal) -> Self {
+        SeedsVec { seeds: val.seeds }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct ProofInfoLocal {
+    /// The merkle proof.
+    pub proof: Vec<[u8; 32]>,
+}
+impl From<ProofInfoLocal> for ProofInfo {
+    fn from(val: ProofInfoLocal) -> Self {
+        ProofInfo { proof: val.proof }
+    }
 }

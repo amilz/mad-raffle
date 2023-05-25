@@ -24,6 +24,8 @@ pub enum RaffleError {
     WinnerAlreadySelected,
     #[msg("Winner not yet selected")]
     WinnerNotSelected,
+    #[msg("Raffle PDA does not match ID")]
+    RafflePdaMismatch,
 }
 
 #[error_code]
@@ -36,4 +38,14 @@ pub enum PnftError {
     InvalidCollectionAddress,
     #[msg("Not Verified by the Collection")]
     NotVerifiedByCollection,
+}
+
+#[error_code]
+pub enum PrizeError {
+    #[msg("Invalid Prize Mint")]
+    InvalidPrizeMint,
+    #[msg("Invalid Winner")]
+    InvalidWinner,
+    #[msg("Raffle has no prize")]
+    NoPrizeInRaffle,
 }

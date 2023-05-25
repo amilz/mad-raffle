@@ -591,17 +591,68 @@ import {
   ) => {
     const [ruleSetAddress] = await findRuleSetPDA(payer.publicKey, name);
   
+    // alt approach to ruleset
+    const MADRAFF_ADDR = new PublicKey('MAD7rNGHFjheUdatt9tfx4Jruz9S9aKq5PVWQbFbLqq');
+    const ruleSet = {
+      libVersion: 1,
+      ruleSetName: name,
+      owner: Array.from(payer.publicKey.toBytes()),
+      operations: {
+        "Transfer:Owner": {
+          All: {
+            rules: [
+              {
+                Amount: {
+                  amount: 1,
+                  operator: "Eq",
+                  field: "Amount",
+                },
+              },
+              {
+                Any: {
+                  rules: [
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Source",
+                      },
+                    },
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Destination",
+                      },
+                    },
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Authority",
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+  
+
     // Encode the file using msgpack so the pre-encoded data can be written directly to a Solana program account
     let finalData =
-      data ??
-      encode([
+      //data ??
+      encode(ruleSet);
+        /* [
         1,
         payer.publicKey.toBuffer().toJSON().data,
         name,
         {
           'Transfer:Owner': 'Pass',
         },
-      ]);
+      ] );*/
+
+    
   
     let createIX = createCreateOrUpdateInstruction(
       {

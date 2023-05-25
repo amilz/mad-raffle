@@ -89,7 +89,6 @@ describe("pnft_transfer tests (end raffle 1)", () => {
 
         const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta)
         expect(newReceiverBalance.value.uiAmount).to.equal(1)
-
     });
     it('unauthorized cannot select winner', async () => {
         let unauthorized = await createFundedWallet(provider);
@@ -112,7 +111,7 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         }
     });
     it('selects a winner', async () => {
-        const tx = await program.methods.selectWinner(new anchor.BN(1))
+        const tx = await program.methods.selectWinner(new anchor.BN(CURRENT_RAFFLE))
         .accounts({
           raffle: rafflePda,
           authority: AUTH_KEYPAIR.publicKey,
@@ -126,4 +125,30 @@ describe("pnft_transfer tests (end raffle 1)", () => {
       tx.lastValidBlockHeight = lastValidBlockHeight;
       await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
     });
+    it('sends prize', async () => {
+        const raffleStatus = await program.account.raffle.fetch(rafflePda);
+        const { winner } = raffleStatus;
+        const { mint, ata } = raffleStatus.prize;
+         
+        let destAta = await getAssociatedTokenAddress(mint, winner);
+
+        const builder = await pNftTransferClient.buildDistributePNFT({
+            authority: AUTH_KEYPAIR.publicKey,
+            winner,
+            sourceAta: ata,
+            nftMint: mint,
+            destAta: destAta,
+            raffle: rafflePda,
+            raffleId: new anchor.BN(CURRENT_RAFFLE),
+        })
+        await buildAndSendTx({
+            provider,
+            ixs: [await builder.instruction()],
+            extraSigners: [AUTH_KEYPAIR],
+        });
+
+        const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta);
+        const postRaffleStatus = await program.account.raffle.fetch(rafflePda);
+        expect(postRaffleStatus.prize.sent).to.equal(true);
+        expect(newReceiverBalance.value.uiAmount).to.equal(1)});
 });

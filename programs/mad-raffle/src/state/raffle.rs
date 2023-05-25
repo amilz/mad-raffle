@@ -89,6 +89,7 @@ pub struct Raffle {
 pub struct Prize {
     pub mint: Pubkey,
     pub ata: Pubkey,
+    pub sent: bool
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
@@ -129,6 +130,7 @@ impl Raffle {
         self.prize = Some(Prize {
             mint,
             ata,
+            sent:false
         });
     }
     pub fn buy_ticket(&mut self, buyer: &Pubkey) {
@@ -168,6 +170,7 @@ impl TicketHolder {
 impl Prize {
     pub fn get_space() -> usize {
         32 + // mint (Pubkey)
-        32   // ata (Pubkey)
+        32 + // ata (Pubkey)
+        1    // sent (bool)
     }
 }

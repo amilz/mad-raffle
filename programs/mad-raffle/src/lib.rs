@@ -7,7 +7,7 @@ pub mod utils;
 
 use anchor_lang::prelude::*;
 use instructions::*;
-
+use utils::AuthorizationDataLocal;
 pub use id::ID;
 
 #[program]
@@ -36,6 +36,15 @@ pub mod mad_raffle {
 
     pub fn select_winner(ctx: Context<SelectWinner>, _raffle_id: u64) -> Result<()> {
         instructions::select_winner(ctx)
+    }
+
+    pub fn distribute_prize<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, DistributePrize<'info>>,
+        raffle_id: u64,
+        authorization_data: Option<AuthorizationDataLocal>,
+        rules_acc_present: bool,
+    ) -> Result<()> {
+        instructions::distribute_prize(ctx, raffle_id, authorization_data, rules_acc_present)
     }
     
 }

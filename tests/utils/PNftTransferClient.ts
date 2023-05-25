@@ -11,6 +11,7 @@ import { Connection, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from
 import { MadRaffle } from "../../target/types/mad_raffle";
 import { fetchNft, findTokenRecordPDA } from './pnft';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AUTH_KEYPAIR } from "../helpers/keys";
 const TMETA_PROG_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
 export class PNftTransferClient  {
@@ -193,6 +194,73 @@ export class PNftTransferClient  {
                 tracker,
                 ...creatorAccounts,
             })
+            .remainingAccounts(remainingAccounts)
+
+        return builder
+    }
+    async buildDistributePNFT({
+        authority,
+        winner,
+        nftMint,
+        sourceAta,
+        destAta,
+        raffle,
+        raffleId
+    }: {
+        winner: PublicKey;
+        authority: PublicKey;
+        nftMint: PublicKey;
+        sourceAta: PublicKey;
+        destAta: PublicKey;
+        raffle: PublicKey;
+        raffleId: anchor.BN;
+    }) {
+        //pnft
+        const {
+            meta,
+            ownerTokenRecordPda,
+            destTokenRecordPda,
+            ruleSet,
+            nftEditionPda,
+            authDataSerialized,
+        } = await this.prepPnftAccounts({
+            nftMint,
+            destAta,
+            authData: null, //currently useless
+            sourceAta,
+        });
+        const remainingAccounts = [];
+        if (!!ruleSet) {
+            remainingAccounts.push({
+                pubkey: ruleSet,
+                isSigner: false,
+                isWritable: false,
+            });
+        }
+        const builder = this.program.methods
+            .distributePrize(raffleId, authDataSerialized, !!ruleSet)
+            .accounts({
+                authority,
+                winner,
+                src: sourceAta,
+                dest: destAta,
+                ownerTokenRecord: ownerTokenRecordPda,
+                destTokenRecord: destTokenRecordPda,
+                nftMint,
+                edition: nftEditionPda,
+                nftMetadata: meta,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                pnftShared: {
+                    authorizationRulesProgram: AUTH_PROG_ID,
+                    tokenMetadataProgram: TMETA_PROG_ID,
+                    instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+                },
+                raffle,
+            })
+            .signers([AUTH_KEYPAIR])
             .remainingAccounts(remainingAccounts)
 
         return builder
