@@ -18,7 +18,7 @@ use crate::utils::{send_pnft, AuthorizationDataLocal};
 pub struct DistributePrize<'info> {
     #[account(
         mut,
-        address = Pubkey::from_str(AUTHORITY).unwrap() @ RaffleError::UnauthorizedSigner
+        //address = Pubkey::from_str(AUTHORITY).unwrap() @ RaffleError::UnauthorizedSigner
     )]
     pub authority: Signer<'info>,
     #[account(
@@ -61,7 +61,7 @@ pub struct DistributePrize<'info> {
         ],
         seeds::program = mpl_token_metadata::id(),
         bump,
-        //TODO - verify that the metadata is verified by the collection
+        //TODO for production - verify that the metadata is verified by the collection
         //constraint = nft_metadata.collection.as_ref().unwrap().verified == true @ PnftError::NotVerifiedByCollection
         constraint = nft_metadata.collection.as_ref().unwrap().key == Pubkey::from_str(COLLECTION_ADDRESS).unwrap() @ PnftError::InvalidCollectionAddress    
     )]
@@ -132,6 +132,11 @@ pub fn distribute_prize<'info>(
     authorization_data: Option<AuthorizationDataLocal>,
     rules_acc_present: bool,
 ) -> Result<()> {
+    require!(
+        *ctx.accounts.authority.key == ctx.accounts.raffle.winner.unwrap() || 
+        *ctx.accounts.authority.key == Pubkey::from_str(AUTHORITY).unwrap(),
+        PrizeError::UnauthorizedDistributor
+    );
 
     let rem_acc = &mut ctx.remaining_accounts.iter();
     let auth_rules = if rules_acc_present {

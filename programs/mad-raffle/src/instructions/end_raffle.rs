@@ -43,7 +43,7 @@ pub struct EndRaffle<'info> {
         ],
         seeds::program = mpl_token_metadata::id(),
         bump,
-        //TODO - verify that the metadata is verified by the collection
+        //TODO for production - verify that the metadata is verified by the collection
         //constraint = nft_metadata.collection.as_ref().unwrap().verified == true @ PnftError::NotVerifiedByCollection
         constraint = nft_metadata.collection.as_ref().unwrap().key == Pubkey::from_str(COLLECTION_ADDRESS).unwrap() @ PnftError::InvalidCollectionAddress    
     )]

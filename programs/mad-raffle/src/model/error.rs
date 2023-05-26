@@ -48,4 +48,6 @@ pub enum PrizeError {
     InvalidWinner,
     #[msg("Raffle has no prize")]
     NoPrizeInRaffle,
+    #[msg("Unauthorized to distribute prize")]
+    UnauthorizedDistributor,
 }
