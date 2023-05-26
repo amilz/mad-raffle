@@ -71,3 +71,15 @@ impl RaffleTracker {
         }
     }
 }
+
+#[account]
+pub struct SuperVault {
+    pub bump: u8,
+}
+
+impl SuperVault {
+    pub fn get_space() -> usize {
+        8 +     // discriminator
+        1       // bump
+    }
+}

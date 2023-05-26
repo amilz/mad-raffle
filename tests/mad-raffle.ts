@@ -3,7 +3,7 @@ import { web3, Program, workspace } from '@project-serum/anchor';
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
-import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
+import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
 
 const { PublicKey } = web3;
@@ -31,6 +31,11 @@ describe("Mad Raffle Tests", async () => {
     program.programId
   );
 
+  const [superVaultPda, _superVaultBump] = await PublicKey.findProgramAddressSync(
+    [SUPER_RAFFLE_SEED],
+    program.programId
+  );
+
   beforeEach(async () => {
     let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
     const airdropTx = await connection.requestAirdrop(AUTH_KEYPAIR.publicKey, LAMPORTS_PER_SOL * 100);
@@ -50,6 +55,7 @@ describe("Mad Raffle Tests", async () => {
         .accounts({
           tracker: trackerPda,
           authority: AUTH_KEYPAIR.publicKey,
+          superVault: superVaultPda
         })
         .signers([AUTH_KEYPAIR])
         .transaction();
@@ -120,7 +126,8 @@ describe("Mad Raffle Tests", async () => {
             raffle: rafflePda,
             buyer: wallet.publicKey,
             feeVault: VAULT_KEYPAIR.publicKey,
-            tracker: trackerPda
+            tracker: trackerPda,
+            superVault: superVaultPda
           })
           .signers([wallet])
           .rpc();

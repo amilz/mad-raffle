@@ -14,3 +14,4 @@ export function raffleNumberBuffer(value: bigint): Uint8Array {
 
 export const TRACKER_SEED = Buffer.from("tracker");
 export const RAFFLE_SEED = Buffer.from("raffle");
+export const SUPER_RAFFLE_SEED = Buffer.from("skull");

@@ -239,8 +239,8 @@ import {
       return sig;
     } catch (e) {
       //this is needed to see program error logs
-      console.error("❌ FAILED TO SEND TX, FULL ERROR: ❌");
-      console.error(e);
+      //console.error("❌ FAILED TO SEND TX, FULL ERROR: ❌");
+      //console.error(e);
       throw e;
     }
   };
@@ -523,8 +523,7 @@ import {
         creators,
         maxSupply: toBigNumber(1),
         collection: collection?.publicKey,
-        //TODO: I think I need to update metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
-        // to work w/ with verfied programmables
+        // Currently we cannot create a verified collection through the JS SDK
         // collectionAuthority: usedOwner,
         tokenStandard: TokenStandard.ProgrammableNonFungible,
       }, {commitment: 'finalized'});

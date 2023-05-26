@@ -2,7 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import { web3 } from '@project-serum/anchor';
 import { assert } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
-import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
+import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
 import { expect } from "chai";
 import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthorizationRules } from "./utils/pnft";
@@ -25,6 +25,10 @@ describe("Raffle Loop", () => {
 
   const [trackerPda, _trackerBump] = PublicKey.findProgramAddressSync(
     [TRACKER_SEED],
+    program.programId
+  );
+  const [superVaultPda, _superVaultBump] = PublicKey.findProgramAddressSync(
+    [SUPER_RAFFLE_SEED],
     program.programId
   );
   for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 20; CURRENT_RAFFLE++) {
@@ -77,7 +81,8 @@ describe("Raffle Loop", () => {
               raffle: rafflePda,
               buyer: wallet.publicKey,
               feeVault: VAULT_KEYPAIR.publicKey,
-              tracker: trackerPda
+              tracker: trackerPda,
+              superVault: superVaultPda
             })
             .signers([wallet])
             .rpc();
@@ -126,7 +131,7 @@ describe("Raffle Loop", () => {
       const creators = Array(5)
         .fill(null)
         .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-      const collection = COLLECTION_KEYPAIR; // TODO Set this to defined collection
+      const collection = COLLECTION_KEYPAIR;
       const { mint, ata } = await createAndFundATA({
         provider: provider,
         owner: nftOwner,

@@ -50,7 +50,7 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         const creators = Array(5)
             .fill(null)
             .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-        const collection = COLLECTION_KEYPAIR; // TODO Set this to defined collection
+        const collection = COLLECTION_KEYPAIR;
         const { mint, ata } = await createAndFundATA({
             provider: provider,
             owner: nftOwner,
@@ -124,6 +124,32 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         tx.recentBlockhash = blockhash;
         tx.lastValidBlockHeight = lastValidBlockHeight;
         await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+    });
+    it('unauthorized cannot send prize', async () => {
+        let unauthorized = await createFundedWallet(provider);
+        try {
+            const raffleStatus = await program.account.raffle.fetch(rafflePda);
+            const { winner } = raffleStatus;
+            const { mint, ata } = raffleStatus.prize;
+    
+            let destAta = await getAssociatedTokenAddress(mint, winner);
+    
+            const builder = await pNftTransferClient.buildDistributePNFT({
+                authority: unauthorized.publicKey,
+                winner,
+                sourceAta: ata,
+                nftMint: mint,
+                destAta: destAta,
+                raffle: rafflePda,
+                raffleId: new anchor.BN(CURRENT_RAFFLE),
+            })
+            await buildAndSendTx({
+                provider,
+                ixs: [await builder.instruction()],
+                extraSigners: [unauthorized],
+            });        } catch (e) {
+            expect(e, "Prize distribution should fail");
+        }
     });
     it('sends prize', async () => {
         const raffleStatus = await program.account.raffle.fetch(rafflePda);
