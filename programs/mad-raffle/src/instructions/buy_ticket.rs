@@ -4,8 +4,8 @@ use anchor_lang::{prelude::*, system_program};
 use solana_program::{system_instruction, pubkey::Pubkey};
 
 use crate::model::RaffleError;
-use crate::state::{Raffle, RaffleTracker};
-use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER, SUPER_RAFFLE_FEE, POINTS_PER_TICKET};
+use crate::state::{Raffle, RaffleTracker, SuperVault};
+use crate::constants::{RAFFLE_SEED, TICKET_PRICE, TICKET_FEE, TRACKER_SEED, FEE_VAULT, MAX_TICKETS_PER_USER, SUPER_RAFFLE_FEE, POINTS_PER_TICKET, SUPER_RAFFLE_SEED};
 
 #[derive(Accounts)]
 pub struct BuyTicket<'info> {
@@ -38,7 +38,9 @@ pub struct BuyTicket<'info> {
         realloc::payer = buyer,
         realloc::zero = false
     )]
-    pub tracker: Account<'info, RaffleTracker> 
+    pub tracker: Account<'info, RaffleTracker>,
+    #[account(mut, seeds = [SUPER_RAFFLE_SEED.as_ref()], bump=super_vault.bump)]
+    pub super_vault: Account<'info, SuperVault>,
 }
 
 pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
@@ -46,6 +48,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let fee_vault = &ctx.accounts.fee_vault;
     let tracker = &mut ctx.accounts.tracker;
+    let super_vault = &mut ctx.accounts.super_vault;
     // Verify raffle is active
     require!(raffle.active, RaffleError::NotActive);
 /*     let current_time = Clock::get().unwrap().unix_timestamp;
@@ -99,7 +102,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     // Transfer funds to the Super Raffle
     let fee_transfer_instruction = system_instruction::transfer(
         buyer.key,
-        &fee_vault.to_account_info().key, 
+        &super_vault.to_account_info().key, 
         SUPER_RAFFLE_FEE
     );
 
@@ -107,8 +110,7 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         &fee_transfer_instruction,
         &[
             buyer.to_account_info(),
-            //TODO replace with super raffle PDA
-            fee_vault.to_account_info(),
+            super_vault.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         ],
         &[],

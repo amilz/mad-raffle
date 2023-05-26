@@ -2,8 +2,8 @@ import * as anchor from "@project-serum/anchor";
 import { web3 } from '@project-serum/anchor';
 import { assert } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
-import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
-import { VAULT_KEYPAIR } from "./helpers/keys";
+import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
+import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
 import { expect } from "chai";
 import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthorizationRules } from "./utils/pnft";
 import { PNftTransferClient } from './utils/PNftTransferClient';
@@ -25,6 +25,10 @@ describe("Raffle Loop", () => {
 
   const [trackerPda, _trackerBump] = PublicKey.findProgramAddressSync(
     [TRACKER_SEED],
+    program.programId
+  );
+  const [superVaultPda, _superVaultBump] = PublicKey.findProgramAddressSync(
+    [SUPER_RAFFLE_SEED],
     program.programId
   );
   for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 20; CURRENT_RAFFLE++) {
@@ -77,7 +81,8 @@ describe("Raffle Loop", () => {
               raffle: rafflePda,
               buyer: wallet.publicKey,
               feeVault: VAULT_KEYPAIR.publicKey,
-              tracker: trackerPda
+              tracker: trackerPda,
+              superVault: superVaultPda
             })
             .signers([wallet])
             .rpc();
@@ -126,7 +131,7 @@ describe("Raffle Loop", () => {
       const creators = Array(5)
         .fill(null)
         .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-      const collection = COLLECTION_KEYPAIR; // TODO Set this to defined collection
+      const collection = COLLECTION_KEYPAIR;
       const { mint, ata } = await createAndFundATA({
         provider: provider,
         owner: nftOwner,
@@ -166,12 +171,54 @@ describe("Raffle Loop", () => {
       expect(newReceiverBalance.value.uiAmount).to.equal(1)
 
     });
+    it('selects a winner', async () => {
+      const tx = await program.methods.selectWinner(new anchor.BN(CURRENT_RAFFLE))
+        .accounts({
+          raffle: rafflePda,
+          authority: AUTH_KEYPAIR.publicKey,
+          random: Keypair.generate().publicKey,
+        })
+        .signers([AUTH_KEYPAIR])
+        .transaction();
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      tx.feePayer = AUTH_KEYPAIR.publicKey;
+      tx.recentBlockhash = blockhash;
+      tx.lastValidBlockHeight = lastValidBlockHeight;
+      await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+    });
+    it('sends prize', async () => {
+      const raffleStatus = await program.account.raffle.fetch(rafflePda);
+      const { winner } = raffleStatus;
+      const { mint, ata } = raffleStatus.prize;
+
+      let destAta = await getAssociatedTokenAddress(mint, winner);
+
+      const builder = await pNftTransferClient.buildDistributePNFT({
+          authority: AUTH_KEYPAIR.publicKey,
+          winner,
+          sourceAta: ata,
+          nftMint: mint,
+          destAta: destAta,
+          raffle: rafflePda,
+          raffleId: new anchor.BN(CURRENT_RAFFLE),
+      })
+      await buildAndSendTx({
+          provider,
+          ixs: [await builder.instruction()],
+          extraSigners: [AUTH_KEYPAIR],
+      });
+
+      const winnerBalance = await provider.connection.getTokenAccountBalance(destAta);
+      const postRaffleStatus = await program.account.raffle.fetch(rafflePda);
+      expect(postRaffleStatus.prize.sent).to.equal(true);
+      expect(winnerBalance.value.uiAmount).to.equal(1);
+  });
 
 
 
   }
   it("Logs the scoreboard", async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
-    console.log(raffleTracker.scoreboard.map((score) => `${score.user.toString().slice(0,4)}...: ${score.points.toString()}`));
+    console.log(raffleTracker.scoreboard.map((score) => `${score.user.toString().slice(0, 4)}...: ${score.points.toString()}`));
   });
 });

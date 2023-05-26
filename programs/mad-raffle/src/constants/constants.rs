@@ -7,19 +7,19 @@ pub const FEE_VAULT: &str = "VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6";
 
 /// This is the authority to initiatialize stuff.
 /// TODO Update for production
-pub const AUTHORITY: &str = "TBD";
+pub const AUTHORITY: &str = "AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy";
 
 /// The current version of the Raffle account.
 const _RENT_ADDITION: u64 = 1_120_560; // amount for + rent of 33 bytes
 
 /// The current ticket price.
-pub const TICKET_PRICE: u64 = 660_000_000; // 0.66 SOL in lamports
+pub const TICKET_PRICE: u64 = 670_000_000; // 0.67 SOL in lamports
 
 /// The current fee collected per ticket.
-pub const TICKET_FEE: u64 = 20_000_000; // 0.02 SOL in lamports
+pub const TICKET_FEE: u64 = 13_100_000; // 0.0131 SOL in lamports
 
 /// The current fee collected per ticket.
-pub const SUPER_RAFFLE_FEE: u64 = 10_000_000; // 0.01 SOL in lamports
+pub const SUPER_RAFFLE_FEE: u64 = 6_900_000; // 0.0069 SOL in lamports
 
 /// The  cost per new raffle (rounded up)
 pub const NEW_RAFFLE_COST: u64 = 1_500_000;

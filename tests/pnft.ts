@@ -6,7 +6,7 @@ import { raffleNumberBuffer, RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { buildAndSendTx, createAndFundATA, createFundedWallet, createTokenAuthorizationRules } from "./utils/pnft";
 import { PNftTransferClient } from './utils/PNftTransferClient';
 import { MadRaffle } from "../target/types/mad_raffle";
-import { COLLECTION_KEYPAIR } from "./helpers/keys";
+import { AUTH_KEYPAIR, COLLECTION_KEYPAIR } from "./helpers/keys";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 describe("pnft_transfer tests (end raffle 1)", () => {
@@ -16,8 +16,9 @@ describe("pnft_transfer tests (end raffle 1)", () => {
 
 
     const pNftTransferClient = new PNftTransferClient(provider.connection, provider.wallet as anchor.Wallet);
-    
+
     const program = anchor.workspace.MadRaffle as anchor.Program<MadRaffle>;
+    const { connection } = program.provider;
 
     const CURRENT_RAFFLE = 1;
     const [trackerPda, _trackerBump] = PublicKey.findProgramAddressSync(
@@ -33,53 +34,6 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE + 1))],
         program.programId
     );
-
-/*     it('transfers pnft to another account (no ruleset)', async () => {
-
-        const nftOwner = await createFundedWallet(provider);
-        const nftReceiver = await createFundedWallet(provider);
-
-        const creators = Array(5)
-            .fill(null)
-            .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-
-        const { mint, ata } = await createAndFundATA({
-            provider: provider,
-            owner: nftOwner,
-            creators,
-            royaltyBps: 1000,
-            programmable: true,
-        });
-
-        const destAta = await getOrCreateAssociatedTokenAccount(
-            provider.connection,
-            nftReceiver,
-            mint,
-            nftReceiver.publicKey
-        );
-        const initialReceiverBalance = await provider.connection.getTokenAccountBalance(destAta.address)
-        expect(initialReceiverBalance.value.uiAmount).to.equal(0)
-
-        const builder = await pNftTransferClient.buildTransferPNFT({
-            sourceAta: ata,
-            nftMint: mint,
-            destAta: destAta.address,
-            owner: nftOwner.publicKey,
-            receiver: nftReceiver.publicKey,
-            raffle: rafflePda,
-            tracker: trackerPda
-        })
-        await buildAndSendTx({
-            provider,
-            ixs: [await builder.instruction()],
-            extraSigners: [nftOwner],
-        });
-
-        const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta.address)
-        expect(newReceiverBalance.value.uiAmount).to.equal(1)
-
-    }); */
-
     it('transfers pnft to another account (1 ruleset)', async () => {
         const nftOwner = await createFundedWallet(provider);
 
@@ -96,7 +50,7 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         const creators = Array(5)
             .fill(null)
             .map((_) => ({ address: Keypair.generate().publicKey, share: 20 }));
-        const collection = COLLECTION_KEYPAIR; // TODO Set this to defined collection
+        const collection = COLLECTION_KEYPAIR;
         const { mint, ata } = await createAndFundATA({
             provider: provider,
             owner: nftOwner,
@@ -117,10 +71,6 @@ describe("pnft_transfer tests (end raffle 1)", () => {
 
         let destAta = await getAssociatedTokenAddress(mint, rafflePda, true);
 
-// we don't need to do this b/c we're not initiating it yet
-/*         const initialReceiverBalance = await provider.connection.getTokenAccountBalance(destAta)
-        expect(initialReceiverBalance.value.uiAmount).to.equal(0)
- */
         const builder = await pNftTransferClient.buildTransferPNFT({
             sourceAta: ata,
             nftMint: mint,
@@ -129,7 +79,7 @@ describe("pnft_transfer tests (end raffle 1)", () => {
             tracker: trackerPda,
             raffle: rafflePda,
             newRaffle: newRafflePda,
-            creators: creators.map(creator=>creator.address),
+            creators: creators.map(creator => creator.address),
         })
         await buildAndSendTx({
             provider,
@@ -139,6 +89,94 @@ describe("pnft_transfer tests (end raffle 1)", () => {
 
         const newReceiverBalance = await provider.connection.getTokenAccountBalance(destAta)
         expect(newReceiverBalance.value.uiAmount).to.equal(1)
-
     });
+    it('unauthorized cannot select winner', async () => {
+        let unauthorized = await createFundedWallet(provider);
+        try {
+            const tx = await program.methods.selectWinner(new anchor.BN(1))
+                .accounts({
+                    raffle: rafflePda,
+                    authority: unauthorized.publicKey,
+                    random: Keypair.generate().publicKey,
+                })
+                .signers([unauthorized])
+                .transaction();
+            let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+            tx.feePayer = unauthorized.publicKey;
+            tx.recentBlockhash = blockhash;
+            tx.lastValidBlockHeight = lastValidBlockHeight;
+            await anchor.web3.sendAndConfirmTransaction(connection, tx, [unauthorized], { commitment: "finalized" });
+        } catch (e) {
+            expect(e, "Winner selection should fail");
+        }
+    });
+    it('selects a winner', async () => {
+        const tx = await program.methods.selectWinner(new anchor.BN(CURRENT_RAFFLE))
+            .accounts({
+                raffle: rafflePda,
+                authority: AUTH_KEYPAIR.publicKey,
+                random: Keypair.generate().publicKey,
+            })
+            .signers([AUTH_KEYPAIR])
+            .transaction();
+        let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+        tx.feePayer = AUTH_KEYPAIR.publicKey;
+        tx.recentBlockhash = blockhash;
+        tx.lastValidBlockHeight = lastValidBlockHeight;
+        await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+    });
+    it('unauthorized cannot send prize', async () => {
+        let unauthorized = await createFundedWallet(provider);
+        try {
+            const raffleStatus = await program.account.raffle.fetch(rafflePda);
+            const { winner } = raffleStatus;
+            const { mint, ata } = raffleStatus.prize;
+    
+            let destAta = await getAssociatedTokenAddress(mint, winner);
+    
+            const builder = await pNftTransferClient.buildDistributePNFT({
+                authority: unauthorized.publicKey,
+                winner,
+                sourceAta: ata,
+                nftMint: mint,
+                destAta: destAta,
+                raffle: rafflePda,
+                raffleId: new anchor.BN(CURRENT_RAFFLE),
+            })
+            await buildAndSendTx({
+                provider,
+                ixs: [await builder.instruction()],
+                extraSigners: [unauthorized],
+            });        } catch (e) {
+            expect(e, "Prize distribution should fail");
+        }
+    });
+    it('sends prize', async () => {
+        const raffleStatus = await program.account.raffle.fetch(rafflePda);
+        const { winner } = raffleStatus;
+        const { mint, ata } = raffleStatus.prize;
+
+        let destAta = await getAssociatedTokenAddress(mint, winner);
+
+        const builder = await pNftTransferClient.buildDistributePNFT({
+            authority: AUTH_KEYPAIR.publicKey,
+            winner,
+            sourceAta: ata,
+            nftMint: mint,
+            destAta: destAta,
+            raffle: rafflePda,
+            raffleId: new anchor.BN(CURRENT_RAFFLE),
+        })
+        await buildAndSendTx({
+            provider,
+            ixs: [await builder.instruction()],
+            extraSigners: [AUTH_KEYPAIR],
+        });
+
+        const winnerBalance = await provider.connection.getTokenAccountBalance(destAta);
+        const postRaffleStatus = await program.account.raffle.fetch(rafflePda);
+        expect(postRaffleStatus.prize.sent).to.equal(true);
+        expect(winnerBalance.value.uiAmount).to.equal(1);
+    });
+
 });

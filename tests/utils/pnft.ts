@@ -239,8 +239,8 @@ import {
       return sig;
     } catch (e) {
       //this is needed to see program error logs
-      console.error("❌ FAILED TO SEND TX, FULL ERROR: ❌");
-      console.error(e);
+      //console.error("❌ FAILED TO SEND TX, FULL ERROR: ❌");
+      //console.error(e);
       throw e;
     }
   };
@@ -523,8 +523,7 @@ import {
         creators,
         maxSupply: toBigNumber(1),
         collection: collection?.publicKey,
-        //TODO: I think I need to update metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
-        // to work w/ with verfied programmables
+        // Currently we cannot create a verified collection through the JS SDK
         // collectionAuthority: usedOwner,
         tokenStandard: TokenStandard.ProgrammableNonFungible,
       }, {commitment: 'finalized'});
@@ -591,17 +590,68 @@ import {
   ) => {
     const [ruleSetAddress] = await findRuleSetPDA(payer.publicKey, name);
   
+    // alt approach to ruleset
+    const MADRAFF_ADDR = new PublicKey('MAD7rNGHFjheUdatt9tfx4Jruz9S9aKq5PVWQbFbLqq');
+    const ruleSet = {
+      libVersion: 1,
+      ruleSetName: name,
+      owner: Array.from(payer.publicKey.toBytes()),
+      operations: {
+        "Transfer:Owner": {
+          All: {
+            rules: [
+              {
+                Amount: {
+                  amount: 1,
+                  operator: "Eq",
+                  field: "Amount",
+                },
+              },
+              {
+                Any: {
+                  rules: [
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Source",
+                      },
+                    },
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Destination",
+                      },
+                    },
+                    {
+                      ProgramOwnedList: {
+                        programs: [Array.from(MADRAFF_ADDR.toBytes())],
+                        field: "Authority",
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+  
+
     // Encode the file using msgpack so the pre-encoded data can be written directly to a Solana program account
     let finalData =
-      data ??
-      encode([
+      //data ??
+      encode(ruleSet);
+        /* [
         1,
         payer.publicKey.toBuffer().toJSON().data,
         name,
         {
           'Transfer:Owner': 'Pass',
         },
-      ]);
+      ] );*/
+
+    
   
     let createIX = createCreateOrUpdateInstruction(
       {

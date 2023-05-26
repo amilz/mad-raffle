@@ -6,16 +6,14 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
 };
-use mpl_token_auth_rules::payload::{Payload, PayloadType, ProofInfo, SeedsVec};
-use mpl_token_metadata::{self,processor::AuthorizationData};
 
 use crate::constants::{RAFFLE_SEED, TRACKER_SEED, COLLECTION_ADDRESS, NEW_RAFFLE_COST, POINTS_FOR_SELLING};
 use crate::model::{RaffleError, PnftError};
 use crate::state::{Raffle, RaffleTracker};
-use crate::utils::send_pnft;
+use crate::utils::{send_pnft, AuthorizationDataLocal};
 
 #[derive(Accounts)]
-pub struct TransferPNFT<'info> {
+pub struct EndRaffle<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut)]
@@ -45,6 +43,7 @@ pub struct TransferPNFT<'info> {
         ],
         seeds::program = mpl_token_metadata::id(),
         bump,
+        //TODO for production - verify that the metadata is verified by the collection
         //constraint = nft_metadata.collection.as_ref().unwrap().verified == true @ PnftError::NotVerifiedByCollection
         constraint = nft_metadata.collection.as_ref().unwrap().key == Pubkey::from_str(COLLECTION_ADDRESS).unwrap() @ PnftError::InvalidCollectionAddress    
     )]
@@ -135,99 +134,9 @@ pub struct TransferPNFT<'info> {
     pub creator5: Option<AccountInfo<'info>>,
 }
 
-#[derive(Accounts)]
-pub struct ProgNftShared<'info> {
-    //can't deserialize directly coz Anchor traits not implemented
-    /// CHECK: address below
-    #[account(address = mpl_token_metadata::id())]
-    pub token_metadata_program: UncheckedAccount<'info>,
 
-    //sysvar ixs don't deserialize in anchor
-    /// CHECK: address below
-    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
-    pub instructions: UncheckedAccount<'info>,
-
-    /// CHECK: address below
-    #[account(address = mpl_token_auth_rules::id())]
-    pub authorization_rules_program: UncheckedAccount<'info>,
-}
-// --------------------------------------- replicating mplex type for anchor IDL export
-//have to do this because anchor won't include foreign structs in the IDL
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub struct AuthorizationDataLocal {
-    pub payload: Vec<TaggedPayload>,
-}
-impl From<AuthorizationDataLocal> for AuthorizationData {
-    fn from(val: AuthorizationDataLocal) -> Self {
-        let mut p = Payload::new();
-        val.payload.into_iter().for_each(|tp| {
-            p.insert(tp.name, PayloadType::try_from(tp.payload).unwrap());
-        });
-        AuthorizationData { payload: p }
-    }
-}
-
-//Unfortunately anchor doesn't like HashMaps, nor Tuples, so you can't pass in:
-// HashMap<String, PayloadType>, nor
-// Vec<(String, PayloadTypeLocal)>
-// so have to create this stupid temp struct for IDL to serialize correctly
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub struct TaggedPayload {
-    name: String,
-    payload: PayloadTypeLocal,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub enum PayloadTypeLocal {
-    /// A plain `Pubkey`.
-    Pubkey(Pubkey),
-    /// PDA derivation seeds.
-    Seeds(SeedsVecLocal),
-    /// A merkle proof.
-    MerkleProof(ProofInfoLocal),
-    /// A plain `u64` used for `Amount`.
-    Number(u64),
-}
-impl From<PayloadTypeLocal> for PayloadType {
-    fn from(val: PayloadTypeLocal) -> Self {
-        match val {
-            PayloadTypeLocal::Pubkey(pubkey) => PayloadType::Pubkey(pubkey),
-            PayloadTypeLocal::Seeds(seeds) => {
-                PayloadType::Seeds(SeedsVec::try_from(seeds).unwrap())
-            }
-            PayloadTypeLocal::MerkleProof(proof) => {
-                PayloadType::MerkleProof(ProofInfo::try_from(proof).unwrap())
-            }
-            PayloadTypeLocal::Number(number) => PayloadType::Number(number),
-        }
-    }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub struct SeedsVecLocal {
-    /// The vector of derivation seeds.
-    pub seeds: Vec<Vec<u8>>,
-}
-impl From<SeedsVecLocal> for SeedsVec {
-    fn from(val: SeedsVecLocal) -> Self {
-        SeedsVec { seeds: val.seeds }
-    }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
-pub struct ProofInfoLocal {
-    /// The merkle proof.
-    pub proof: Vec<[u8; 32]>,
-}
-impl From<ProofInfoLocal> for ProofInfo {
-    fn from(val: ProofInfoLocal) -> Self {
-        ProofInfo { proof: val.proof }
-    }
-}
-
-pub fn transfer_pnft<'info>(
-    ctx: Context<'_, '_, '_, 'info, TransferPNFT<'info>>,
+pub fn end_raffle<'info>(
+    ctx: Context<'_, '_, '_, 'info, EndRaffle<'info>>,
     authorization_data: Option<AuthorizationDataLocal>,
     rules_acc_present: bool,
 ) -> Result<()> {
@@ -255,16 +164,19 @@ pub fn transfer_pnft<'info>(
         &ctx.accounts.pnft_shared.authorization_rules_program,
         auth_rules,
         authorization_data,
-        // None,
+        None,
     )?;
 
     let raffle = &mut ctx.accounts.raffle;
     let seller = &mut ctx.accounts.owner;
     let tracker = &mut ctx.accounts.tracker;
     let new_raffle = &mut ctx.accounts.new_raffle;
-    // Verify raffle is active
+    let nft_mint = &ctx.accounts.nft_mint;
+    let ata = &ctx.accounts.dest;
+    // Verify raffle is active and has sold some tickets
+    let total_tickets: u32 = raffle.tickets.iter().map(|holder| holder.qty as u32).sum();
     require!(raffle.active, RaffleError::NotActive);
-
+    require!(total_tickets > 0, RaffleError::NoTickets);
 
     let metadata = &mut ctx.accounts.nft_metadata;
     let empty_vec = vec![];
@@ -323,16 +235,39 @@ pub fn transfer_pnft<'info>(
     **raffle.to_account_info().try_borrow_mut_lamports()? -= payment_to_seller + royalties_paid;
     **seller.to_account_info().try_borrow_mut_lamports()? += payment_to_seller;
 
-    // TODO Close seller ATA
-
-    raffle.end_raffle(ctx.accounts.nft_mint.key());
+    // Update raffle state
+    raffle.end_raffle(
+        nft_mint.key(),
+        ata.key()
+    );
+    // Increment the raffle counter and initialize the new raffle
     tracker.increment();
     msg!("New raffle to be created: {}", tracker.current_raffle);
     new_raffle.initialize(
         tracker.current_raffle,
         *ctx.bumps.get("new_raffle").unwrap(),
     );
+    // Add bonus points to the seller
     tracker.add_points(&seller.key, POINTS_FOR_SELLING);
 
     Ok(())
 }
+
+#[derive(Accounts)]
+pub struct ProgNftShared<'info> {
+    //can't deserialize directly coz Anchor traits not implemented
+    /// CHECK: address below
+    #[account(address = mpl_token_metadata::id())]
+    pub token_metadata_program: UncheckedAccount<'info>,
+
+    //sysvar ixs don't deserialize in anchor
+    /// CHECK: address below
+    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
+    pub instructions: UncheckedAccount<'info>,
+
+    /// CHECK: address below
+    #[account(address = mpl_token_auth_rules::id())]
+    pub authorization_rules_program: UncheckedAccount<'info>,
+}
+// --------------------------------------- replicating mplex type for anchor IDL export
+//have to do this because anchor won't include foreign structs in the IDL
