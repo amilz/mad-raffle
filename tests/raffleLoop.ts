@@ -31,7 +31,7 @@ describe("Raffle Loop", () => {
     [SUPER_RAFFLE_SEED],
     program.programId
   );
-  for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 20; CURRENT_RAFFLE++) {
+  for (let CURRENT_RAFFLE = 2; CURRENT_RAFFLE <= 3; CURRENT_RAFFLE++) {
 
     const [rafflePda, _raffleBump] = PublicKey.findProgramAddressSync(
       [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE))],

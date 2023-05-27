@@ -1,10 +1,11 @@
 import * as anchor from "@project-serum/anchor";
 import { web3, Program, workspace } from '@project-serum/anchor';
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { MadRaffle } from "../target/types/mad_raffle";
 import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./helpers/seeds";
 import { AUTH_KEYPAIR, VAULT_KEYPAIR } from "./helpers/keys";
+import { createFundedWallet } from "./utils/pnft";
 
 const { PublicKey } = web3;
 
@@ -43,7 +44,7 @@ describe("Mad Raffle Tests", async () => {
       signature: airdropTx,
       lastValidBlockHeight,
       blockhash
-    }, 'finalized');  
+    }, 'finalized');
   });
   beforeEach(async () => {
     try {
@@ -51,31 +52,11 @@ describe("Mad Raffle Tests", async () => {
       if (raffleTracker) return;
     } catch {
       console.log('No tracker found, creating...');
-      const tx = await program.methods.initializeTracker()
+      const tx = await program.methods.initialize()
         .accounts({
           tracker: trackerPda,
           authority: AUTH_KEYPAIR.publicKey,
-          superVault: superVaultPda
-        })
-        .signers([AUTH_KEYPAIR])
-        .transaction();
-      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-      tx.feePayer = AUTH_KEYPAIR.publicKey;
-      tx.recentBlockhash = blockhash;
-      tx.lastValidBlockHeight = lastValidBlockHeight;
-      let txId = await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
-    }
-  });
-  beforeEach(async () => {
-    try {
-      const raffleStatus = await program.account.raffle.fetch(rafflePda);
-      if (raffleStatus) return;
-    } catch {
-      console.log('No raffle found, creating...');
-      const tx = await program.methods.createRaffle()
-        .accounts({
-          tracker: trackerPda,
-          user: AUTH_KEYPAIR.publicKey,
+          superVault: superVaultPda,
           raffle: rafflePda
         })
         .signers([AUTH_KEYPAIR])
@@ -84,7 +65,7 @@ describe("Mad Raffle Tests", async () => {
       tx.feePayer = AUTH_KEYPAIR.publicKey;
       tx.recentBlockhash = blockhash;
       tx.lastValidBlockHeight = lastValidBlockHeight;
-      let txId = await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+      await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
     }
   });
   it("Checks that the raffle is active", async () => {
@@ -95,7 +76,30 @@ describe("Mad Raffle Tests", async () => {
     const raffleTracker = await program.account.raffleTracker.fetch(trackerPda);
     assert.ok(raffleTracker.currentRaffle.eq(new anchor.BN(CURRENT_RAFFLE)), "currentRaffle should be 1");
   });
-
+  it("Checks that the super tracker is initiated", async () => {
+    const superTracker = await program.account.superVault.fetch(superVaultPda);
+    assert.ok(superTracker.bump, "supertracker bump should be defined");
+  });
+  it("tries to reinit tracker", async () => {
+    try {
+      const tx = await program.methods.initialize()
+        .accounts({
+          tracker: trackerPda,
+          authority: AUTH_KEYPAIR.publicKey,
+          superVault: superVaultPda,
+          raffle: rafflePda
+        })
+        .signers([AUTH_KEYPAIR])
+        .transaction();
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      tx.feePayer = AUTH_KEYPAIR.publicKey;
+      tx.recentBlockhash = blockhash;
+      tx.lastValidBlockHeight = lastValidBlockHeight;
+      await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+    } catch (e) {
+      expect(e, "Expected reinitialize to fail");
+    }
+  });
   it("Checks the number of ticket buyers", async () => {
     const initialRaffleStatus = await program.account.raffle.fetch(rafflePda);
     if (initialRaffleStatus.tickets.length > 0) return;
@@ -158,5 +162,88 @@ describe("Mad Raffle Tests", async () => {
     );
 
   });
+  it("Tries to buy ticket with wrong vault", async () => {
+    const wallet = await createFundedWallet(provider, 2);
+    const wrongVault = web3.Keypair.generate();
+    try {
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      const signature = await program.methods
+        .buyTicket()
+        .accounts({
+          raffle: rafflePda,
+          buyer: wallet.publicKey,
+          feeVault: wrongVault.publicKey,
+          tracker: trackerPda,
+          superVault: superVaultPda
+        })
+        .signers([wallet])
+        .rpc();
+  
+      await connection.confirmTransaction({
+        signature,
+        lastValidBlockHeight,
+        blockhash
+      });
+      console.log("WRONG VAULT", signature);
+    } catch (e) {
+      expect(e, "Expected transaction to fail with wrong vault");
+    }
+  });
+  it("Tries to buy ticket with wrong raffle", async () => {
+    const wallet = await createFundedWallet(provider, 2);
+    const [wrongRaffle, _wrongRaffleBump] = await PublicKey.findProgramAddressSync(
+      [RAFFLE_SEED, raffleNumberBuffer(BigInt(CURRENT_RAFFLE+1))],
+      program.programId
+    );
+    try {
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      const signature = await program.methods
+        .buyTicket()
+        .accounts({
+          raffle: wrongRaffle,
+          buyer: wallet.publicKey,
+          feeVault: VAULT_KEYPAIR.publicKey,
+          tracker: trackerPda,
+          superVault: superVaultPda
+        })
+        .signers([wallet])
+        .rpc();
+  
+      await connection.confirmTransaction({
+        signature,
+        lastValidBlockHeight,
+        blockhash
+      });
+      console.log("WRONG RAFFLE", signature);
 
+    } catch (e) {
+      expect(e, "Expected transaction to fail due to wrong raffle PDA");
+    }
+  });
+  it("Tries to buy ticket with insufficent balance", async () => {
+    const wallet = await createFundedWallet(provider, 0.2);
+    try {
+      let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
+      const signature = await program.methods
+        .buyTicket()
+        .accounts({
+          raffle: rafflePda,
+          buyer: wallet.publicKey,
+          feeVault: VAULT_KEYPAIR.publicKey,
+          tracker: trackerPda,
+          superVault: superVaultPda
+        })
+        .signers([wallet])
+        .rpc();  
+      await connection.confirmTransaction({
+        signature,
+        lastValidBlockHeight,
+        blockhash
+      });
+      console.log("LOW BALANCE", signature);
+
+    } catch (e) {
+      expect(e, "Expected transaction to fail due to insufficient balance");
+    }
+  });
 });

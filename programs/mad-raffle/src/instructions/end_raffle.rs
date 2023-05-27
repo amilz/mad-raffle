@@ -140,6 +140,17 @@ pub fn end_raffle<'info>(
     authorization_data: Option<AuthorizationDataLocal>,
     rules_acc_present: bool,
 ) -> Result<()> {
+    let raffle = &mut ctx.accounts.raffle;
+    let seller = &mut ctx.accounts.owner;
+    let tracker = &mut ctx.accounts.tracker;
+    let new_raffle = &mut ctx.accounts.new_raffle;
+    let nft_mint = &ctx.accounts.nft_mint;
+    let ata = &ctx.accounts.dest;
+    // Verify raffle is active and has sold some tickets
+    let total_tickets: u32 = raffle.tickets.iter().map(|holder| holder.qty as u32).sum();
+    require!(raffle.active, RaffleError::NotActive);
+    require!(total_tickets > 0, RaffleError::NoTickets);
+
     let rem_acc = &mut ctx.remaining_accounts.iter();
     let auth_rules = if rules_acc_present {
         Some(next_account_info(rem_acc)?)
@@ -147,11 +158,11 @@ pub fn end_raffle<'info>(
         None
     };
     send_pnft(
-        &ctx.accounts.owner.to_account_info(),
-        &ctx.accounts.owner.to_account_info(),
+        &seller.to_account_info(),
+        &seller.to_account_info(),
         &ctx.accounts.src,
         &ctx.accounts.dest,
-        &ctx.accounts.raffle.to_account_info(),
+        &raffle.to_account_info(),
         &ctx.accounts.nft_mint,
         &ctx.accounts.nft_metadata,
         &ctx.accounts.edition,
@@ -167,29 +178,10 @@ pub fn end_raffle<'info>(
         None,
     )?;
 
-    let raffle = &mut ctx.accounts.raffle;
-    let seller = &mut ctx.accounts.owner;
-    let tracker = &mut ctx.accounts.tracker;
-    let new_raffle = &mut ctx.accounts.new_raffle;
-    let nft_mint = &ctx.accounts.nft_mint;
-    let ata = &ctx.accounts.dest;
-    // Verify raffle is active and has sold some tickets
-    let total_tickets: u32 = raffle.tickets.iter().map(|holder| holder.qty as u32).sum();
-    require!(raffle.active, RaffleError::NotActive);
-    require!(total_tickets > 0, RaffleError::NoTickets);
-
     let metadata = &mut ctx.accounts.nft_metadata;
     let empty_vec = vec![];
     let creators = metadata.data.creators.as_ref().unwrap_or(&empty_vec);
-    let collection = &metadata.collection;
-    let collection_verified = &metadata.collection.as_ref().map(|c| c.verified);
-    let collection_key = &metadata.collection.as_ref().map(|c| c.key);
 
-    msg!("creators: {:?}", creators);
-    msg!("collection: {:?}", collection);
-    msg!("collection_verified: {:?}", collection_verified);
-    msg!("collection_key: {:?}", collection_key);
-    
     // Calculate payment amount and royalty amount
     // Leave enough lamports in the account to cover rent
     let rent_required = Rent::get()?.minimum_balance(Raffle::get_space(raffle.tickets.len() + 1 as usize));
