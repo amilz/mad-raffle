@@ -14,16 +14,12 @@ pub use id::ID;
 pub mod mad_raffle {
 
     use super::*;
-    pub fn create_raffle(ctx: Context<CreateRaffle>) -> Result<()> {
-        instructions::create_raffle(ctx)
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        instructions::initialize(ctx)
     }
 
     pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
         instructions::buy_ticket(ctx)
-    }
-
-    pub fn initialize_tracker(ctx: Context<InitializeTracker>) -> Result<()> {
-        instructions::initialize_tracker(ctx)
     }
 
     pub fn end_raffle<'a, 'b, 'c, 'info>(
