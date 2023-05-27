@@ -124,8 +124,6 @@ pub struct DistributePrize<'info> {
     pub raffle: Box<Account<'info, Raffle>>
 }
 
-
-
 pub fn distribute_prize<'info>(
     ctx: Context<'_, '_, '_, 'info, DistributePrize<'info>>,
     _raffle_id: u64,

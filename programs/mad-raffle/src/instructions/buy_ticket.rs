@@ -49,10 +49,9 @@ pub fn buy_ticket(ctx: Context<BuyTicket>) -> Result<()> {
     let fee_vault = &ctx.accounts.fee_vault;
     let tracker = &mut ctx.accounts.tracker;
     let super_vault = &mut ctx.accounts.super_vault;
-    // Verify raffle is active
+
     require!(raffle.active, RaffleError::NotActive);
-/*     let current_time = Clock::get().unwrap().unix_timestamp;
-    require!(current_time < raffle.end_time, RaffleError::RaffleClosed); */
+
     
     if let Some(ticket_holder) = raffle
         .tickets

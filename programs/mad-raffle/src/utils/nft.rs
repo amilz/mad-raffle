@@ -16,8 +16,6 @@ use crate::{constants::RAFFLE_SEED, model::PnftError, state::Raffle, *};
 #[allow(clippy::too_many_arguments)]
 pub fn send_pnft<'info>(
     authority_and_owner: &AccountInfo<'info>,
-    //(!) payer can't carry data, has to be a normal KP:
-    // https://github.com/solana-labs/solana/blob/bda0c606a19ce1cc44b5ab638ff0b993f612e76c/runtime/src/system_instruction_processor.rs#L197
     payer: &AccountInfo<'info>,
     source_ata: &Account<'info, TokenAccount>,
     dest_ata: &Account<'info, TokenAccount>,
@@ -34,7 +32,7 @@ pub fn send_pnft<'info>(
     authorization_rules_program: &UncheckedAccount<'info>,
     rules_acc: Option<&AccountInfo<'info>>,
     authorization_data: Option<AuthorizationDataLocal>,
-    //if passed, use signed_invoke() instead of invoke()
+    // For signing w/ PDA if needed (e.g., from the raffle to user)
     program_signer: Option<&Account<'info, Raffle>>,
 ) -> Result<()> {
     let mut builder = TransferBuilder::new();
@@ -192,10 +190,6 @@ impl From<AuthorizationDataLocal> for AuthorizationData {
     }
 }
 
-//Unfortunately anchor doesn't like HashMaps, nor Tuples, so you can't pass in:
-// HashMap<String, PayloadType>, nor
-// Vec<(String, PayloadTypeLocal)>
-// so have to create this stupid temp struct for IDL to serialize correctly
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct TaggedPayload {
     name: String,
@@ -213,6 +207,7 @@ pub enum PayloadTypeLocal {
     /// A plain `u64` used for `Amount`.
     Number(u64),
 }
+
 impl From<PayloadTypeLocal> for PayloadType {
     fn from(val: PayloadTypeLocal) -> Self {
         match val {
