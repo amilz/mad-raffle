@@ -1,0 +1,30 @@
+{
+    "model": "metadata",
+    "address": "F7kmH3v7BpzLXC8B9hmV1XWmeLd6kQ24rmSQKe5Fzme6",
+    "mintAddress": "DESqihrqrcsARfjPCEMDLjp7xaVk1rzg631kXmQJbqkQ",
+    "updateAuthorityAddress": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
+    "json": null,
+    "jsonLoaded": false,
+    "name": "QuickNode Pixel",
+    "symbol": "QNPIX",
+    "uri": "https://arweave.net/yIgHNXiELgQqW8QIbFM9ibVV37jhvfyW3mFcZGRX-PA",
+    "isMutable": true,
+    "primarySaleHappened": false,
+    "sellerFeeBasisPoints": 500,
+    "editionNonce": 255,
+    "creators": [
+        {
+            "address": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
+            "verified": true,
+            "share": 100
+        }
+    ],
+    "tokenStandard": 4,
+    "collection": null,
+    "collectionDetails": null,
+    "uses": null,
+    "programmableConfig": {
+        "__kind": "V1",
+        "ruleSet": null
+    }
+}

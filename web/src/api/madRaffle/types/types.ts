@@ -1460,6 +1460,7 @@ export interface Raffle {
   prize?: Prize;
   winner?: PublicKey;
   availableLamports: number;
+  pda: PublicKey
 }
 
 export interface TicketHolder {

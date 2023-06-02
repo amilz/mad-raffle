@@ -37,7 +37,6 @@ export function MadRaffleProgramProvider(props: { children: ReactNode }): JSX.El
             MAD_RAFFLE_PROGRAM_ID,
             provider ?? ({} as anchor.AnchorProvider)
         );
-
         setSdk(MadRaffleSDK.from(program));
     }, [anchorWallet, connection, setSdk]);
 

@@ -90,12 +90,14 @@ export enum ApiErrorCode {
 }
 
 export enum SolanaTxType {
-    TBD = 0,
+    FAILED_TO_CONFIRM = 0,
+    FAILED_TO_GENERATE_IX = 1,
 }
 
 export enum SolanaQueryType {
     INVALID_ARGUMENT = 0,
     UNABLE_TO_FIND_CURRENT_RAFFLE = 1,
+    NO_WALLET_CONNECTED = 2,
 }
 
 
