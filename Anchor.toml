@@ -3,12 +3,14 @@ seeds = false
 skip-lint = false
 [programs.localnet]
 mad_raffle = "MAD7rNGHFjheUdatt9tfx4Jruz9S9aKq5PVWQbFbLqq"
+[programs.devnet]
+mad_raffle = "GDBJ3Gfvzd1dzBKq5UryHAodUF8k5ZwjvinV6dferSm1"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "wallet.json"
 
 [scripts]

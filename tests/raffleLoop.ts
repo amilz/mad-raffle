@@ -120,11 +120,12 @@ describe("Raffle Loop", () => {
 
       const name = 'PlayRule123';
 
-      const ruleSetAddr = await createTokenAuthorizationRules(
-        provider,
-        nftOwner,
-        name
-      );
+      const ruleSetAddr = await new PublicKey('eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9');
+      /*         const ruleSetAddr = await createTokenAuthorizationRules(
+                  provider,
+                  nftOwner,
+                  name
+              ); */
 
       const nftReceiver = await createFundedWallet(provider);
 

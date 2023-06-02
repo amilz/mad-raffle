@@ -15,11 +15,11 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe("Mad Raffle Tests", async () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.local());
+  anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = await workspace.MadRaffle as Program<MadRaffle>;
   const { connection } = program.provider;
-  const provider = anchor.AnchorProvider.local();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const [trackerPda, _trackerBump] = await PublicKey.findProgramAddressSync(
@@ -39,7 +39,7 @@ describe("Mad Raffle Tests", async () => {
 
   beforeEach(async () => {
     let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-    const airdropTx = await connection.requestAirdrop(AUTH_KEYPAIR.publicKey, LAMPORTS_PER_SOL * 100);
+    const airdropTx = await connection.requestAirdrop(AUTH_KEYPAIR.publicKey, LAMPORTS_PER_SOL * 1);
     await connection.confirmTransaction({
       signature: airdropTx,
       lastValidBlockHeight,
@@ -66,6 +66,8 @@ describe("Mad Raffle Tests", async () => {
       tx.recentBlockhash = blockhash;
       tx.lastValidBlockHeight = lastValidBlockHeight;
       await anchor.web3.sendAndConfirmTransaction(connection, tx, [AUTH_KEYPAIR], { commitment: "finalized" });
+      console.log("WAITING 1 MIN")
+      await(60000)
     }
   });
   it("Checks that the raffle is active", async () => {
