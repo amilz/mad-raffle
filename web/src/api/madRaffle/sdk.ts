@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { Keypair, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { AUTH_PROGRAM_ID, COLLECTION_PUBKEY, TOKEN_METADATA_PROGRAM, VAULT_PUBKEY, AUTH_PUBKEY } from "./constants/keys";
 import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./constants/seeds";

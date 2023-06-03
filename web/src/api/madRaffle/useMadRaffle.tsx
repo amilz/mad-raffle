@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { IDL, MadRaffle } from "./types/types";
 import { MAD_RAFFLE_PROGRAM_ID } from "./constants/id";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
