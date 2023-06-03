@@ -45,12 +45,12 @@ describe("pnft_transfer tests (end raffle 1)", () => {
         const nftOwner = await createFundedWallet(provider);
 
         const name = 'PlayRule123';
-
-        const ruleSetAddr = await createTokenAuthorizationRules(
+        const ruleSetAddr = await new PublicKey('eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9');
+/*         const ruleSetAddr = await createTokenAuthorizationRules(
             provider,
             nftOwner,
             name
-        );
+        ); */
 
         const nftReceiver = await createFundedWallet(provider);
 
@@ -113,11 +113,12 @@ describe("pnft_transfer tests (end raffle 1)", () => {
   
             const name = 'PlayRule123';
       
-            const ruleSetAddr = await createTokenAuthorizationRules(
-              provider,
-              nftOwner,
-              name
-            );
+            const ruleSetAddr = await new PublicKey('eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9');
+            /*         const ruleSetAddr = await createTokenAuthorizationRules(
+                        provider,
+                        nftOwner,
+                        name
+                    ); */
       
             const nftReceiver = await createFundedWallet(provider);
       

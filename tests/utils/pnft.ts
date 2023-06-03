@@ -531,6 +531,7 @@ import {
       metadataAddress = newNftTx.metadataAddress;
       tokenAddress = newNftTx.tokenAddress;
       masterEditionAddress = newNftTx.masterEditionAddress;
+
       // Doing it w/ JS SDK above instead
 /*       ({ metadataAddress, tokenAddress, masterEditionAddress } =
         await _createAndMintPNft({
