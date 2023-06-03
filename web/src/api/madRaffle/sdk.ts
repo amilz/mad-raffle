@@ -463,8 +463,56 @@ export class MadRaffleSDK {
             .remainingAccounts(remainingAccounts)
             .instruction();
     }
-    public async updateRaffleHistory(): Promise<LocalRaffle[]> {
+    private getLocalRaffles(): LocalRaffle[] {
+        // Fetch existing raffles from localStorage
+        let localRaffles: LocalRaffle[] = [];
+        const storedRaffles = localStorage.getItem('localRaffles');
+        if (storedRaffles) {
+            const parsedRaffles = JSON.parse(storedRaffles);
+            if (Array.isArray(parsedRaffles) && parsedRaffles.every(raffle => this.isLocalRaffle(raffle))) {
+                localRaffles = parsedRaffles;
+            }
+        }
+        return localRaffles;
+    }
+    
+    public async *updateRaffleHistory(): AsyncGenerator<LocalRaffle> {
         const currentRaffle = await this.getCurrentRaffleId();
+        console.log('currentRaffle', currentRaffle)
+    
+        let localRaffles: LocalRaffle[] = this.getLocalRaffles();
+
+        // If local storage is up to date, return
+        if (localRaffles.length >= currentRaffle - 1) return;
+    
+        for (let n = 1; n < currentRaffle; n++) {
+            // If the raffle already exists in local storage, skip
+            const thisRaffle = localRaffles.find(raffle => raffle.id === n);
+
+            if (thisRaffle) {
+                console.log('found raffle in local storage', n);
+                yield thisRaffle;
+                continue;
+            }
+            try {
+                // Fetch the raffle from the backend
+                let fetchedRaffle: Raffle = await this.getRaffleDetails({ raffleId: n });
+                let localRaffle = this.convertToLocalRaffle(fetchedRaffle);
+                yield localRaffle;
+                // If the raffle is claimed, add to local storage
+                if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {                            
+                    localRaffles.push(localRaffle);                            
+                    localStorage.setItem('localRaffles', JSON.stringify(localRaffles));
+                }
+            } catch (error) {
+                console.error(`Failed to fetch details for raffle ${n}:`, error);
+            }
+        }
+    }
+    
+/*     public async updateRaffleHistory(): Promise<LocalRaffle[]> {
+        const currentRaffle = await this.getCurrentRaffleId();
+        console.log('currentRaffle', currentRaffle)
         // Check if localStorage is available
         let allRaffles: LocalRaffle[] = [];
         if (typeof Storage !== "undefined") {
@@ -477,37 +525,37 @@ export class MadRaffleSDK {
                     localRaffles = parsedRaffles;
                 }
             }
-    
-            // If the currentRaffleId > 1, we start the loop
-            if (currentRaffle > 1) {
-                for (let n = 1; n < currentRaffle; n++) {
-                    // If the raffle already exists in local storage, skip
-                    const thisRaffle = localRaffles.find(raffle => raffle.id === n);
-                    if (thisRaffle) {
-                        allRaffles.push(thisRaffle)
-                        continue;
+            console.log('localRaffles', localRaffles)
+            
+            for (let n = 1; n < currentRaffle; n++) {
+                // If the raffle already exists in local storage, skip
+                const thisRaffle = localRaffles.find(raffle => raffle.id === n);
+                if (thisRaffle) {
+                    allRaffles.push(thisRaffle)
+                    console.log('found raffle in local storage', n);
+                    continue;
+                }
+                console.log('shouldnt be here');
+                continue;
+                try {
+                    // Fetch the raffle from the backend
+                    let fetchedRaffle: Raffle = await this.getRaffleDetails({ raffleId: n });
+                    let localRaffle = this.convertToLocalRaffle(fetchedRaffle);
+                    allRaffles.push(localRaffle);
+                    // If the raffle is claimed, add to local storage
+                    if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {                            
+                        localRaffles.push(localRaffle);                            
+                        localStorage.setItem('localRaffles', JSON.stringify(localRaffles));
                     }
-    
-                    try {
-                        // Fetch the raffle from the backend
-                        let fetchedRaffle: Raffle = await this.getRaffleDetails({ raffleId: n });
-                        let localRaffle = this.convertToLocalRaffle(fetchedRaffle);
-                        allRaffles.push(localRaffle);
-                        // If the raffle is claimed, add to local storage
-                        if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {                            
-                            localRaffles.push(localRaffle);                            
-                            localStorage.setItem('localRaffles', JSON.stringify(localRaffles));
-                        }
-                    } catch (error) {
-                        console.error(`Failed to fetch details for raffle ${n}:`, error);
-                    }
+                } catch (error) {
+                    console.error(`Failed to fetch details for raffle ${n}:`, error);
                 }
             }
         } else {
             console.warn("localStorage is not available");
         }
         return allRaffles;
-    }
+    } */
 
     private isLocalRaffle(object: any): object is LocalRaffle {
         return object &&

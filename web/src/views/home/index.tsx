@@ -93,7 +93,7 @@ export const HomeView: FC = ({ }) => {
           {wallet && wallet.publicKey && wallet.publicKey.toBase58() === AUTH_PUBKEY.toBase58() &&
             <>
               <SelectWinner />
-              <DistributePrize />
+{/*               <DistributePrize /> */}
             </>
           }
         </div>

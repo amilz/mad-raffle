@@ -1,8 +1,8 @@
 // Next, React
-import { FC,  useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 // Wallet
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useLocalStorage, useWallet } from '@solana/wallet-adapter-react';
 
 // Components
 import pkg from '../../../package.json';
@@ -11,20 +11,31 @@ import pkg from '../../../package.json';
 import { useMadRaffle } from 'api/madRaffle/useMadRaffle';
 import { LocalRaffle } from 'api/madRaffle/sdk';
 import { formatPublicKey } from 'utils';
+import { Spinner } from 'components/Spinner';
 
 
 export const HistoryView: FC = ({ }) => {
   const wallet = useWallet();
   const { madRaffle } = useMadRaffle();
-  const [history, setHistory] = useState<LocalRaffle[]>([]);
-
+  const [history, setHistory] = useLocalStorage<LocalRaffle[]>('raffleHistory', []);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (madRaffle) {
-      //TODO(amilz) add checks to prevent from running too often
-      madRaffle.updateRaffleHistory().then(setHistory);
-    }
-  }, [madRaffle])
+    const fetchHistory = async () => {
+      setLoading(true);
+      if (madRaffle ) {
+        let newHistory = [];
+        for await (const raffle of madRaffle.updateRaffleHistory()) {
+          newHistory.push(raffle);
+        }
+        setHistory(newHistory);
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [madRaffle]);
+  
+
 
 
   return (
@@ -42,24 +53,25 @@ export const HistoryView: FC = ({ }) => {
           Raffle History
         </h4>
         <div className="flex flex-col mt-2 text-2xl">
-          <table className="table-auto border-collapse border border-gray-300 tracking-wide ">
-            <thead>
-              <tr>
-                <th className="border border-gray-300 p-2">ID</th>
-                <th className="border border-gray-300 p-2">Winner</th>
-                <th className="border border-gray-300 p-2">Prize Claimed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((raffle) => (
-                <tr key={raffle.id}>
-                  <td className="border border-gray-300 p-2">{raffle.id}</td>
-                  <td className="border border-gray-300 p-2">{formatPublicKey(raffle.winner?.toString() || '')}</td>
-                  <td className="border border-gray-300 p-2">{raffle.claimed ? 'Yes' : 'No'}</td>
+          {loading ? <Spinner /> :
+            <table className="table-auto border-collapse border border-gray-300 tracking-wide ">
+              <thead>
+                <tr>
+                  <th className="border border-gray-300 p-2">ID</th>
+                  <th className="border border-gray-300 p-2">Winner</th>
+                  <th className="border border-gray-300 p-2">Prize Claimed</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {history.map((raffle) => (
+                  <tr key={raffle.id}>
+                    <td className="border border-gray-300 p-2">{raffle.id}</td>
+                    <td className="border border-gray-300 p-2">{formatPublicKey(raffle.winner?.toString() || '')}</td>
+                    <td className="border border-gray-300 p-2">{raffle.claimed ? 'Yes' : 'No'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>}
         </div>
       </div>
     </div>

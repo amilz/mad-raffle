@@ -50,7 +50,7 @@ export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess }) => {
     }, [buyer, connection, madRaffle, signTransaction, sendTransaction]);
 
     return (
-        <Button text="Buy Ticket ◎0.69" onClick={onClick} loading={loading} disabled={false}/>
+        <Button text="Buy Ticket ◎0.69" onClick={onClick} loading={loading} disabled={!buyer}/>
     );
 };
 

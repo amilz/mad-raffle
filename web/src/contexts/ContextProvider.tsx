@@ -22,7 +22,7 @@ const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const { autoConnect } = useAutoConnect();
     const { networkConfiguration } = useNetworkConfiguration();
     const network = networkConfiguration as WalletAdapterNetwork;
-    const endpoint = 'https://rpc-devnet.helius.xyz/?api-key=de3d5f2c-b22a-4b7d-a5b2-987d5b9e4750';
+    const endpoint = process.env.NEXT_PUBLIC_RPC;
 
     const wallets = useMemo(
         () => [
