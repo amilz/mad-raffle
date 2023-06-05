@@ -19,12 +19,12 @@ export const AppBar: FC = () => {
       {/* Left nav section (Home/History) */}
       <div className="flex gap-6">
         <NavElement
-          label="Home"
+          label="🏠"
           href="/"
           navigationStarts={() => setIsNavOpen(false)}
         />
         <NavElement
-          label="History"
+          label="🕘"
           href="/history"
           navigationStarts={() => setIsNavOpen(false)}
         />
