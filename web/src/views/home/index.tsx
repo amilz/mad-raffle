@@ -76,8 +76,8 @@ export const HomeView: FC = ({ }) => {
         {!connected ?
           <div className='flex flex-col items-center justify-center'>
             <p className='max-w-md text-2xl text-left md:mr-0 text-slate-400'>
-              mad raffle is a "reverse", perpetual raffle.
-              at any given time there's always 1 raffle open for any mad lad NFT.<br />
+              mad raffle is a &quot;reverse&quot;, perpetual raffle.
+              at any given time there&apos;s always 1 raffle open for any mad lad NFT.<br />
               <ul className="list-disc list-outside pl-6">
                 <li>ticket costs 0.69 sol.</li>
                 <li>the raffle pot grows each time somebody buys a ticket.</li>
