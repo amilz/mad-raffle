@@ -25,6 +25,7 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess }) => {
             return;
         }
         const ticketNumberInt = parseInt(ticketNumber);
+        console.log(ticketNumberInt);
         if (isNaN(ticketNumberInt)) {
             notify({ type: 'error', message: 'Invalid ticket number', description: 'Please enter a valid ticket number.' });
             return;

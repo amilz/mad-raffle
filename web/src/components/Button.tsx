@@ -11,11 +11,11 @@ interface ButtonProps {
 export const Button: FC<ButtonProps> = ({ text, onClick, loading, disabled }) => {
     return (
         <div className="flex flex-row justify-center cursor-pointer" onClick={onClick}>
-            <div className="relative group items-center">
-                <div className="m-1 absolute -inset-0.5 bg-gradient-to-r from-red-800 to-red-500 
-    rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt text-black"></div>
+            <div className="relative group items-center text-black">
+                <div className="m-1 absolute -inset-0.5 bg-madlad-red 
+    rounded-lg blur opacity-20 group-hover:opacity-40 text-black transition duration-1000 group-hover:duration-200 animate-tilt text-black"></div>
                 <button
-                    className="px-8 m-2 min-w-button btn bg-gradient-to-br from-red-800 to-red-500 hover:bg-white hover:text-black focus:bg-white focus:text-red-800 text-black text-3xl "
+                    className="px-8 m-2 min-w-button btn bg-madlad-red  text-black text-3xl "
                     disabled={loading || disabled}
                 >
                     {loading ? <Spinner /> : <span>{text}</span>}

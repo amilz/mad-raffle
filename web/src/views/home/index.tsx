@@ -76,16 +76,16 @@ export const HomeView: FC = ({ }) => {
         {!connected ?
           <div className='flex flex-col items-center justify-center'>
             <p className='max-w-md text-2xl text-left md:mr-0 text-slate-400'>
-              mad raffle is a &quot;reverse&quot;, perpetual raffle.
-              at any given time there&apos;s always 1 raffle open for any mad lad NFT.<br />
+              Mad Raffle is a &quot;reverse&quot;, perpetual raffle.
+              at any given time there&apos;s always 1 raffle open for any Mad Lad NFT.<br />
               <ul className="list-disc list-outside pl-6">
-                <li>ticket costs 0.69 sol.</li>
-                <li>the raffle pot grows each time somebody buys a ticket.</li>
-                <li>at any point, anybody can sell a madlad to the raffle to take the pot.</li>
-                <li>that ends the raffle. a winner is selected. prize dropped. and next raffle starts.</li>
+                <li>Ticket costs ◎0.69.</li>
+                <li>The raffle pot grows each time somebody buys a ticket.</li>
+                <li>At any point, anybody can sell a madlad to the raffle to take the pot.</li>
+                <li>That ends the raffle. A winner is selected. Prize dropped. And next raffle starts.</li>
               </ul>
             </p><br />
-            <WalletMultiButtonDynamic className="px-8 m-2 min-w-button btn bg-gradient-to-br from-red-800 to-red-500 hover:bg-white hover:text-black focus:bg-white focus:text-red-800 text-black text-xl " />
+            <WalletMultiButtonDynamic className="px-8 m-2 min-w-button btn bg-madlad-red hover:bg-madlad-red focus:bg-madlad-red text-black text-xl " />
           </div>
           : <div>
             <h4 className="md:w-full text-2xl md:text-4xl text-center text-slate-300 my-2">

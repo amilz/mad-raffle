@@ -3,6 +3,11 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "media",
   theme: {
+    colors: {
+      'madlad-red': '#E61A3E', 
+      'madlad-dark': '#B4000C',
+      'black': '#000000'
+    },
     extend: {
       minWidth: {
         'button': '16rem', // or whatever minimum width you'd like
