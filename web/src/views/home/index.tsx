@@ -81,11 +81,16 @@ export const HomeView: FC = ({ }) => {
               <ul className="list-disc list-outside pl-6">
                 <li>Ticket costs ◎0.69.</li>
                 <li>The raffle pot grows each time somebody buys a ticket.</li>
-                <li>At any point, anybody can sell a madlad to the raffle to take the pot.</li>
+                <li>At any point, anybody can sell a Mad Lad to the raffle to take the pot.</li>
                 <li>That ends the raffle. A winner is selected. Prize dropped. And next raffle starts.</li>
               </ul>
             </p><br />
-            <WalletMultiButtonDynamic className="px-8 m-2 min-w-button btn bg-madlad-red hover:bg-madlad-red focus:bg-madlad-red text-black text-xl " />
+            <WalletMultiButtonDynamic
+              className="px-8 m-2 min-w-button btn bg-madlad-red 
+              hover:bg-madlad-red hover:text-black
+              focus:bg-madlad-red focus:text-black
+              text-black text-xl"
+            />
           </div>
           : <div>
             <h4 className="md:w-full text-2xl md:text-4xl text-center text-slate-300 my-2">
