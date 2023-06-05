@@ -3,15 +3,13 @@ import dynamic from 'next/dynamic';
 import React, { useState } from "react";
 import { useAutoConnect } from '../contexts/AutoConnectProvider';
 import NavElement from './nav-element';
+import { useWallet } from '@solana/wallet-adapter-react';
 
-const WalletMultiButtonDynamic = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-);
 
 export const AppBar: FC = () => {
   const { autoConnect, setAutoConnect } = useAutoConnect();
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const { disconnect, connected } = useWallet();
 
   return (
     <div className="flex justify-between items-center h-20 shadow-lg bg-black text-neutral-content border-b border-zinc-600 bg-opacity-66 p-4">
@@ -31,7 +29,7 @@ export const AppBar: FC = () => {
 
       {/* Right nav section (WalletConnect) */}
       <div>
-        <WalletMultiButtonDynamic className="btn-ghost btn-sm rounded-btn text-lg" />
+        {connected && <button onClick={disconnect}> ❌ </button>}
       </div>
     </div>
   );
