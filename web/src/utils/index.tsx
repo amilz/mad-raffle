@@ -21,7 +21,12 @@ export function formatNumber(num) {
     }).format(num);
 }
 
-
+export function padWithLeadingZeros(number: number) {
+    if (number < 0 || number > 999) {
+        return number.toString();
+    }
+    return number.toString().padStart(3, '0');
+}
 
 /**
  * Returns a number whose value is limited to the given range.

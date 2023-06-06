@@ -8,16 +8,16 @@ import { ApiError, SolanaTxType } from 'api/madRaffle/error';
 
 interface SelectWinnerProps {
     onSuccess?: () => void;
-    currentRaffleId?: number;
+    startingRaffleId?: number;
 }
 type ChangeNumber = 'increment' | 'decrement';
 
-export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, currentRaffleId }) => {
+export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleId }) => {
     const { connection } = useConnection();
     const { publicKey: admin, signTransaction, sendTransaction } = useWallet();
     const { madRaffle } = useMadRaffle();
     const [loading, setLoading] = useState(false);
-    const [ticketNumber, setTicketNumber] = useState((currentRaffleId-1) ?? 0);
+    const [ticketNumber, setTicketNumber] = useState((startingRaffleId - 1) ?? 0);
     madRaffle.getCurrentRaffleId
 
     const onChangeNumber = useCallback((change: ChangeNumber) => {
@@ -88,7 +88,7 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, currentRaffleId
             notify({ type: 'Focking Mad!', message: 'Prize Sent!', txid: signature });
 
         } catch (error: any) {
-          console.error(error);
+            console.error(error);
             notify({ type: 'Fock!', message: `Buy Ticket Failed!`, description: error?.message });
         } finally {
             setLoading(false);
@@ -97,9 +97,9 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, currentRaffleId
 
     return (
         <div>
-            <Button text="+1" onClick={()=>onChangeNumber('increment')} loading={false} disabled={false}/>
-            <Button text={`Select Winner: ${ticketNumber.toString()}`} onClick={onClick} loading={loading} disabled={false}/>
-            <Button text="-1" onClick={()=>onChangeNumber('decrement')} loading={false} disabled={false}/>
+            <Button text="+1" onClick={() => onChangeNumber('increment')} loading={false} disabled={false} />
+            <Button text={`Select Winner: ${ticketNumber.toString()}`} onClick={onClick} loading={loading} disabled={false} />
+            <Button text="-1" onClick={() => onChangeNumber('decrement')} loading={false} disabled={false} />
         </div>
     );
 };

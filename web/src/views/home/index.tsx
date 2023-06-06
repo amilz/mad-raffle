@@ -15,7 +15,7 @@ import { SellNft } from 'components/SellNft';
 import { useMadRaffle } from 'api/madRaffle/useMadRaffle';
 import { Raffle } from 'api/madRaffle/types/types';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { formatNumber } from 'utils';
+import { formatNumber, padWithLeadingZeros } from 'utils';
 import { Spinner } from 'components/Spinner';
 import { AUTH_PUBKEY } from 'api/madRaffle/constants/keys';
 import { SelectWinner } from 'components/SelectWinner';
@@ -32,6 +32,9 @@ export const HomeView: FC = ({ }) => {
   const [userTickets, setUserTickets] = useState<number>(0);
   const [totalTickets, setTotalTickets] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showBuyTicketButton, setShowBuyTicketButton] = useState(true);
+  const [buyingTicket, setBuyingTicket] = useState(false);
+  const [restart, setRestart] = useState(false);
   const { connected } = wallet;
 
   useEffect(() => {
@@ -56,17 +59,27 @@ export const HomeView: FC = ({ }) => {
   // Could combine but this is easier to read and more scalable if we add more actions
   const onBuySuccess = useCallback(() => {
     madRaffle.getRaffleDetails({ current: true }).then(setRaffleDetails);
+    setBuyingTicket(false);
+  }, [madRaffle]);
+  const onBuyError = useCallback(() => {
+    setBuyingTicket(false);
   }, [madRaffle]);
   const onSellSuccess = useCallback(() => {
     madRaffle.getRaffleDetails({ current: true }).then(setRaffleDetails);
+    setShowBuyTicketButton(true);
   }, [madRaffle]);
+  const onCancelSell = useCallback(() => {
+    setShowBuyTicketButton(true);
+    setRestart(prevState => !prevState);
+  }, []);
 
   const solPriceString = raffleDetails ? (formatNumber(raffleDetails.availableLamports / LAMPORTS_PER_SOL)).toString() : '0';
-  const showSellNftButton = raffleDetails && totalTickets > 0;
+  const showSellNftButton = raffleDetails && totalTickets > 0 && !buyingTicket;
   const ticketsString = totalTickets > 0 ? `You have ${userTickets} of ${totalTickets} tickets.` : 'No tickets sold yet.';
+  const adminTicketDefault = (raffleDetails !== null && raffleDetails !== undefined && raffleDetails.id !== null && raffleDetails.id !== undefined) ? raffleDetails.id : 0;
   return (
 
-    <div className="md:hero mx-auto p-4">
+    <div className="md:hero mx-auto">
       <div className="hero-content flex flex-col">
         <div className=''>
           <Image src={MadRaffleLogo} alt={'Mad Raffle Logo'} width={200} height={200} />
@@ -98,11 +111,13 @@ export const HomeView: FC = ({ }) => {
                 : (
                   <>
                     {raffleDetails !== null && raffleDetails !== undefined &&
-                      <p>Current Raffle: {raffleDetails.id.toString()}</p>}
-                    {userTickets !== null && userTickets !== undefined &&
+                      <p>Current Raffle: {padWithLeadingZeros(raffleDetails.id)}</p>}
+                    {showBuyTicketButton && userTickets !== null && userTickets !== undefined &&
                       <p>{ticketsString}</p>}
                     {raffleDetails !== null && raffleDetails !== undefined &&
                       <p>Current Pot: ◎{solPriceString}</p>}
+                    {!showBuyTicketButton &&
+                      <p className='font-bold'>Select Lad to Sell: <span onClick={()=>onCancelSell()} className='text-base text-madlad-red'>(cancel)</span></p>}
                   </>
                 )
               }
@@ -110,14 +125,21 @@ export const HomeView: FC = ({ }) => {
             </h4>
 
             <div className="flex flex-col mt-2">
-              <BuyTicket onSuccess={onBuySuccess} />
+              {showBuyTicketButton && <BuyTicket 
+                onSuccess={onBuySuccess} 
+                onClickButton={() => setBuyingTicket(true)}
+                onError={onBuyError}
+              />}
               {showSellNftButton && <SellNft
                 solPriceString={solPriceString}
                 onSuccess={onSellSuccess}
+                onClickButton={() => setShowBuyTicketButton(false)}
+                restart = {restart}
+                onError={onCancelSell}
               />}
               {wallet && wallet.publicKey && wallet.publicKey.toBase58() === AUTH_PUBKEY.toBase58() &&
                 <>
-                  <SelectWinner currentRaffleId={raffleDetails.id ?? 0} />
+                  <SelectWinner startingRaffleId={adminTicketDefault} />
                 </>
               }
             </div>

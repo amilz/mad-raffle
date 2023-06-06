@@ -10,8 +10,8 @@ interface ButtonProps {
 
 export const Button: FC<ButtonProps> = ({ text, onClick, loading, disabled }) => {
     return (
-        <div className="flex flex-row justify-center cursor-pointer" onClick={onClick}>
-            <div className="relative group items-center text-black">
+        <div className="flex flex-row justify-center " >
+            <div className="relative group items-center text-black cursor-pointer" onClick={onClick}>
                 <div className="m-1 absolute -inset-0.5 bg-madlad-red 
     rounded-lg blur opacity-20 group-hover:opacity-40 text-black transition duration-1000 group-hover:duration-200 animate-tilt text-black"></div>
                 <button

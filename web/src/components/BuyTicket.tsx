@@ -8,9 +8,11 @@ import { ApiError, SolanaTxType } from 'api/madRaffle/error';
 
 interface BuyTicketProps {
     onSuccess: () => void;
+    onClickButton: () => void;
+    onError: () => void;
 }
 
-export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess }) => {
+export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess, onClickButton, onError }) => {
     const { connection } = useConnection();
     const { publicKey: buyer, signTransaction, sendTransaction } = useWallet();
     const { madRaffle } = useMadRaffle();
@@ -24,6 +26,7 @@ export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess }) => {
             return;
         }
         setLoading(true);
+        onClickButton();
         try {
             const transaction = new Transaction;
             const ix = await madRaffle.createBuyTicketInstruction();
@@ -44,6 +47,7 @@ export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess }) => {
             onSuccess();
         } catch (error: any) {
             notify({ type: 'Fock!', message: `Buy Ticket Failed!`, description: error?.message });
+            onError();
         } finally {
             setLoading(false);
         }
