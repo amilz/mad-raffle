@@ -9,7 +9,6 @@ import { useWallet } from '@solana/wallet-adapter-react';
 // Components
 import { BuyTicket } from '../../components/BuyTicket';
 import MadRaffleLogo from '../../../public/mad.png';
-import pkg from '../../../package.json';
 
 // Store
 import { SellNft } from 'components/SellNft';
@@ -70,7 +69,7 @@ export const HomeView: FC = ({ }) => {
     <div className="md:hero mx-auto p-4">
       <div className="hero-content flex flex-col">
         <div className=''>
-          <Image src={MadRaffleLogo} alt={'test'} width={200} height={200} />
+          <Image src={MadRaffleLogo} alt={'Mad Raffle Logo'} width={200} height={200} />
         </div>
 
         {!connected ?
@@ -99,9 +98,11 @@ export const HomeView: FC = ({ }) => {
                 : (
                   <>
                     {raffleDetails !== null && raffleDetails !== undefined &&
-                      <p>Current Raffle: {raffleDetails.id.toString()}.</p>}
+                      <p>Current Raffle: {raffleDetails.id.toString()}</p>}
                     {userTickets !== null && userTickets !== undefined &&
                       <p>{ticketsString}</p>}
+                    {raffleDetails !== null && raffleDetails !== undefined &&
+                      <p>Current Pot: ◎{solPriceString}</p>}
                   </>
                 )
               }

@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { HistoryView } from "../views";
+import { ScoreboardView } from "../views";
 
 const Basics: NextPage = (props) => {
   return (
@@ -8,11 +8,11 @@ const Basics: NextPage = (props) => {
       <Head>
         <title>Mad Raffle</title>
         <meta
-          name="Mad Raffle Raffle History"
+          name="Mad Raffle Points"
           content="Mad Raffle is a decentralized raffle platform built on Solana for the Mad Lads NFT community."
         />
       </Head>
-      <HistoryView />
+      <ScoreboardView />
     </div>
   );
 };
