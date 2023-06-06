@@ -117,7 +117,7 @@ export const HomeView: FC = ({ }) => {
               />}
               {wallet && wallet.publicKey && wallet.publicKey.toBase58() === AUTH_PUBKEY.toBase58() &&
                 <>
-                  <SelectWinner />
+                  <SelectWinner currentRaffleId={raffleDetails.id ?? 0} />
                 </>
               }
             </div>

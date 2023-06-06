@@ -8,33 +8,36 @@ import { ApiError, SolanaTxType } from 'api/madRaffle/error';
 
 interface SelectWinnerProps {
     onSuccess?: () => void;
+    currentRaffleId?: number;
 }
+type ChangeNumber = 'increment' | 'decrement';
 
-export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess }) => {
+export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, currentRaffleId }) => {
     const { connection } = useConnection();
     const { publicKey: admin, signTransaction, sendTransaction } = useWallet();
     const { madRaffle } = useMadRaffle();
-
     const [loading, setLoading] = useState(false);
-    const [ticketNumber, setTicketNumber] = useState("");
+    const [ticketNumber, setTicketNumber] = useState((currentRaffleId-1) ?? 0);
+    madRaffle.getCurrentRaffleId
 
-
+    const onChangeNumber = useCallback((change: ChangeNumber) => {
+        if (change === 'increment') {
+            setTicketNumber(ticketNumber + 1);
+        } else {
+            setTicketNumber(ticketNumber - 1);
+        }
+    }, [ticketNumber]);
     const onClick = useCallback(async () => {
         if (!admin) {
             notify({ type: 'error', message: 'error', description: 'Wallet not connected!' });
             return;
         }
-        const ticketNumberInt = parseInt(ticketNumber);
-        console.log(ticketNumberInt);
-        if (isNaN(ticketNumberInt)) {
-            notify({ type: 'error', message: 'Invalid ticket number', description: 'Please enter a valid ticket number.' });
-            return;
-        }
+
         setLoading(true);
         try {
             const transaction = new Transaction;
             //TODO add form for ticket number
-            const ix = await madRaffle.createSelectWinnerInstruction(parseInt(ticketNumber));
+            const ix = await madRaffle.createSelectWinnerInstruction(ticketNumber);
             if (!ix) { ApiError.solanaTxError(SolanaTxType.FAILED_TO_GENERATE_IX) }
 
             let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
@@ -66,7 +69,7 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess }) => {
         try {
             const transaction = new Transaction;
             //TODO add form for ticket number
-            const ix = await madRaffle.createDistributePrizeInstruction(parseInt(ticketNumber));
+            const ix = await madRaffle.createDistributePrizeInstruction(ticketNumber);
             if (!ix) { ApiError.solanaTxError(SolanaTxType.FAILED_TO_GENERATE_IX) }
 
             let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
@@ -94,14 +97,9 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess }) => {
 
     return (
         <div>
-            <input
-                type="number"
-                value={ticketNumber}
-                onChange={e => setTicketNumber(e.target.value)}
-                placeholder="Enter raffle number"
-                className="input input-bordered w-64 mb-2"
-            />
-            <Button text="Select Winner" onClick={onClick} loading={loading} disabled={false}/>
+            <Button text="+1" onClick={()=>onChangeNumber('increment')} loading={false} disabled={false}/>
+            <Button text={`Select Winner: ${ticketNumber.toString()}`} onClick={onClick} loading={loading} disabled={false}/>
+            <Button text="-1" onClick={()=>onChangeNumber('decrement')} loading={false} disabled={false}/>
         </div>
     );
 };

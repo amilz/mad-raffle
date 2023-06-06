@@ -51,7 +51,7 @@ export const ScoreboardView: FC = ({ }) => {
         setDisplayedScoreboard(prev => {
           // removes the user's score from the leaderboard if present and adds the new score
           const scoresWithoutUser = prev.filter(score => score.user.toBase58() !== publicKey.toBase58());
-          const result = [...scoresWithoutUser, userScore].sort((a, b) => b.points - a.points);
+          const result = [...scoresWithoutUser, userScore].sort((a, b) => a.rank - b.rank);
           return result;
         });
       }
