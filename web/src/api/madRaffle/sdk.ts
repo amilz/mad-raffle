@@ -471,7 +471,7 @@ export class MadRaffleSDK {
         // Check if localStorage is available
         let allRaffles: LocalRaffle[] = [];
         if (typeof Storage !== "undefined") {
-            const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles'));
+            const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles')) || [];
             const newLocalRaffles: LocalRaffle[] = [...existingLocalRaffles];
             for (let n = 1; n < currentRaffle; n++) {
                 let thisRaffle = existingLocalRaffles.find(raffle => Number(raffle.id) === Number(n));
