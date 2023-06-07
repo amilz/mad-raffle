@@ -6,6 +6,7 @@ import { useMadRaffle } from 'api/madRaffle/useMadRaffle';
 import { SimpleNFT } from 'api/madRaffle/sdk';
 import { ComputeBudgetProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import { ApiError, SolanaTxType } from 'api/madRaffle/error';
+import Image from 'next/image';
 
 
 interface NFTComponentProps {
@@ -49,7 +50,7 @@ export const SellNft: FC<SellNftProps> = ({ solPriceString, onSuccess, onClickBu
   const [nfts, setNfts] = useState<SimpleNFT[]>([]);
   const [selectedNft, setSelectedNft] = useState<SimpleNFT>(null);
   const [selectingNft, setSelectingNft] = useState(false);
-
+  const [noLads, setNoLads] = useState(false);
   // Fetch NFTs
   useEffect(() => {
     if (!seller) return;
@@ -104,21 +105,31 @@ export const SellNft: FC<SellNftProps> = ({ solPriceString, onSuccess, onClickBu
   }, [selectedNft]);
 
   const onShowNfts = useCallback(() => {
-    if (noLads) return;
+    if (noLads) {
+      return;
+    }
     onClickButton();
     setSelectingNft(true);
     return;
-  }, []);
+  }, [noLads, onClickButton]);
   useEffect(() => {
     setSelectedNft(null);
     setSelectingNft(false);
   }, [restart]);
+  useEffect(() => {
+    if (nfts.length <= 0) {
+      setNoLads(true);
+    } else {
+      setNoLads(false);
+    }
+  }, [nfts]);
 
-  const noLads = nfts.length <= 0;
+
+
   const buttonText = noLads ? `No Focking Lads` : !selectingNft ? `Sell a Lad ◎${solPriceString}` : `Sell Now ◎${solPriceString}`;
   return (
     <div>
-      {!selectingNft && <Button text={buttonText} onClick={onShowNfts} loading={false} disabled={noLads} />}
+      {!selectingNft && <Button text={buttonText} onClick={noLads ? null : onShowNfts} loading={false} disabled={noLads} />}
       <div className="flex flex-wrap justify-center">
         {selectingNft && nfts && nfts.map(nft =>
           <div
