@@ -88,7 +88,7 @@ export const SellNft: FC<SellNftProps> = ({ solPriceString, onSuccess, onClickBu
       notify({ type: 'Focking Mad!', message: 'Your Lad has Sold!', txid: signature });
       onSuccess();
     } catch (error) {
-      notify({ type: 'Fock!', message: `Sell NFT Failed!`, description: error?.message });
+      notify({ type: 'Fock!', message: `Fock! Sell Lad Failed!`, description: error?.message });
       onError();
       console.error(error);
     } finally {

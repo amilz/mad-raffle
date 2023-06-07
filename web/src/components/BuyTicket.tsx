@@ -46,7 +46,7 @@ export const BuyTicket: FC<BuyTicketProps> = ({ onSuccess, onClickButton, onErro
             notify({ type: 'Focking Mad!', message: 'Buy Ticket Success!', txid: signature });
             onSuccess();
         } catch (error: any) {
-            notify({ type: 'Fock!', message: `Buy Ticket Failed!`, description: error?.message });
+            notify({ type: 'Fock!', message: `Fock! Buy Ticket Failed!`, description: error?.message });
             onError();
         } finally {
             setLoading(false);

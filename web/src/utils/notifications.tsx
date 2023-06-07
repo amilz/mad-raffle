@@ -9,10 +9,10 @@ export function notify(newNotification: {
   if (newNotification.message === "WalletSendTransactionError: User rejected the request.") {
     return; 
   }
-  if (newNotification.message.toLowerCase().includes("rejected the request".toLowerCase())) {
+  if (newNotification.message && newNotification.message.toLowerCase().includes("rejected the request".toLowerCase())) {
     return; 
   }
-  if (newNotification.description.toLowerCase().includes("rejected the request".toLowerCase())) {
+  if (newNotification.description && newNotification.description.toLowerCase().includes("rejected the request".toLowerCase())) {
     return; 
   }
   
