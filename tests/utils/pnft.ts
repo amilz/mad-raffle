@@ -592,7 +592,7 @@ import {
     const [ruleSetAddress] = await findRuleSetPDA(payer.publicKey, name);
   
     // alt approach to ruleset
-    const MADRAFF_ADDR = new PublicKey('MAD7rNGHFjheUdatt9tfx4Jruz9S9aKq5PVWQbFbLqq');
+    const MADRAFF_ADDR = new PublicKey('MAD67ypEX8PR92g45gP8jtRhg8NNQhdAd4yLkh2BKmD');
     const ruleSet = {
       libVersion: 1,
       ruleSetName: name,

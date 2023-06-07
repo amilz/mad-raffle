@@ -2,15 +2,17 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-mad_raffle = "MAD7rNGHFjheUdatt9tfx4Jruz9S9aKq5PVWQbFbLqq"
+mad_raffle = "MAD67ypEX8PR92g45gP8jtRhg8NNQhdAd4yLkh2BKmD"
 [programs.devnet]
 mad_raffle = "GDBJ3Gfvzd1dzBKq5UryHAodUF8k5ZwjvinV6dferSm1"
+[programs.mainnet]
+mad_raffle = "MAD67ypEX8PR92g45gP8jtRhg8NNQhdAd4yLkh2BKmD"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "wallet.json"
 
 [scripts]

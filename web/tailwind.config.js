@@ -19,7 +19,6 @@ module.exports = {
   ],
   daisyui: {
     styled: true,
-    // TODO: Theme needs works
     themes: [
       {
         'solana': { 

@@ -51,3 +51,9 @@ pub enum PrizeError {
     #[msg("Unauthorized to distribute prize")]
     UnauthorizedDistributor,
 }
+
+#[error_code]
+pub enum FeedError {
+    #[msg("Invalid Price Feed")]
+    InvalidPriceFeed,
+}

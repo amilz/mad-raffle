@@ -7,6 +7,7 @@ export function getExplorerUrl(
     itemType = 'address' // | 'tx' | 'block'
   ) {
     const getClusterUrlParam = () => {
+      return ''; // override for mainnet-beta w/o suffix
       let cluster = ''
       if (endpoint === 'localnet') {
         cluster = `custom&customUrl=${encodeURIComponent(
