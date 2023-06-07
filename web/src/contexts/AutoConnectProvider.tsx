@@ -17,7 +17,6 @@ export const AutoConnectProvider: FC<{ children: ReactNode }> = ({ children }) =
     // TODO: make switch/slider settings
     // const [autoConnect, setAutoConnect] = useLocalStorage('autoConnect', false);
     const [autoConnect, setAutoConnect] = useLocalStorage('autoConnect', true);
-
     return (
         <AutoConnectContext.Provider value={{ autoConnect, setAutoConnect }}>{children}</AutoConnectContext.Provider>
     );

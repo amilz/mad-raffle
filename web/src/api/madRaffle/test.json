@@ -1,30 +1,86 @@
-{
-    "model": "metadata",
-    "address": "F7kmH3v7BpzLXC8B9hmV1XWmeLd6kQ24rmSQKe5Fzme6",
-    "mintAddress": "DESqihrqrcsARfjPCEMDLjp7xaVk1rzg631kXmQJbqkQ",
-    "updateAuthorityAddress": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
-    "json": null,
-    "jsonLoaded": false,
-    "name": "QuickNode Pixel",
-    "symbol": "QNPIX",
-    "uri": "https://arweave.net/yIgHNXiELgQqW8QIbFM9ibVV37jhvfyW3mFcZGRX-PA",
-    "isMutable": true,
-    "primarySaleHappened": false,
-    "sellerFeeBasisPoints": 500,
-    "editionNonce": 255,
-    "creators": [
-        {
-            "address": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
-            "verified": true,
-            "share": 100
-        }
-    ],
-    "tokenStandard": 4,
-    "collection": null,
-    "collectionDetails": null,
-    "uses": null,
-    "programmableConfig": {
-        "__kind": "V1",
-        "ruleSet": null
+[
+    {
+        "id": 1,
+        "version": 1,
+        "bump": 254,
+        "active": false,
+        "numTickets": 6,
+        "startTime": 1685627741,
+        "endTime": 1685668965,
+        "prizeNft": "3YUnSmDmbwuCAzkxEGHmnm8FaqSiSfH9QdJ7T7dLvEmW",
+        "winner": "Cxcfw2GC1tfEPEuNABNwTujwr6nEtsV6Enzjxz2pDqoE",
+        "claimed": true
+    },
+    {
+        "id": 2,
+        "version": 1,
+        "bump": 253,
+        "active": false,
+        "numTickets": 5,
+        "startTime": 1685668965,
+        "endTime": 1685743416,
+        "prizeNft": "3YUnSmDmbwuCAzkxEGHmnm8FaqSiSfH9QdJ7T7dLvEmW",
+        "winner": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
+        "claimed": true
+    },
+    {
+        "id": 3,
+        "version": 1,
+        "bump": 254,
+        "active": false,
+        "numTickets": 1,
+        "startTime": 1685743416,
+        "endTime": 1685744180,
+        "prizeNft": "3YUnSmDmbwuCAzkxEGHmnm8FaqSiSfH9QdJ7T7dLvEmW",
+        "winner": "Cxcfw2GC1tfEPEuNABNwTujwr6nEtsV6Enzjxz2pDqoE",
+        "claimed": true
+    },
+    {
+        "id": 4,
+        "version": 1,
+        "bump": 254,
+        "active": false,
+        "numTickets": 2,
+        "startTime": 1685744180,
+        "endTime": 1685745162,
+        "prizeNft": "BbGvVpeWHuBSe4cTzHjyqDKgbsgmeEjUxhXHnXLuk77C",
+        "winner": "MiLZAcWZgMYvFnZqzJ6XRj4h5r47bgX64Vt5gRnBvqv",
+        "claimed": true
+    },
+    {
+        "id": 5,
+        "version": 1,
+        "bump": 253,
+        "active": false,
+        "numTickets": 8,
+        "startTime": 1685745162,
+        "endTime": 1685998981,
+        "prizeNft": "7bd4TU7XpsuGhzaC7DhmLNDaL4P4KoN4S4CXeyaSfTxK",
+        "winner": "GgPpTKg78vmzgDtP1DNn72CHAYjRdKY7AV6zgszoHCSa",
+        "claimed": true
+    },
+    {
+        "id": 6,
+        "version": 1,
+        "bump": 255,
+        "active": false,
+        "numTickets": 10,
+        "startTime": 1685998981,
+        "endTime": 1686060520,
+        "prizeNft": "DWubPNxY4fqwFESwRUUCi5e5cJ869gCrNPhhJrQ1wFDA",
+        "winner": "3uXxGLB8JvBmNcK9GUJDjGcjA7LvKv2mydseyMvGMZdZ",
+        "claimed": true
+    },
+    {
+        "id": 7,
+        "version": 1,
+        "bump": 255,
+        "active": false,
+        "numTickets": 4,
+        "startTime": 1686060520,
+        "endTime": 1686068867,
+        "prizeNft": "H7cGVbwcmSn4BJmuMTWeoj5UHQqdyDry6jHJc3xpC6Sn",
+        "winner": "MiLZAcWZgMYvFnZqzJ6XRj4h5r47bgX64Vt5gRnBvqv",
+        "claimed": true
     }
-}
+]

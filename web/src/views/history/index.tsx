@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 
 // Wallet
-import { useLocalStorage, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 // Components
 import MadRaffleLogo from '../../../public/mad.png';
@@ -18,24 +18,39 @@ import { Spinner } from 'components/Spinner';
 export const HistoryView: FC = ({ }) => {
   const wallet = useWallet();
   const { madRaffle } = useMadRaffle();
-  const [history, setHistory] = useLocalStorage<LocalRaffle[]>('raffleHistory', []);
+  const [history, setHistory] = useState<LocalRaffle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sdkLoaded, setSdkLoaded] = useState(false);
+
 
   useEffect(() => {
+    let isMounted = true;
     const fetchHistory = async () => {
-      setLoading(true);
-      if (madRaffle ) {
-        let newHistory = [];
-        for await (const raffle of madRaffle.updateRaffleHistory()) {
-          newHistory.push(raffle);
+      if (madRaffle && madRaffle.isReady()) {
+        // Only fetch history if madRaffle has changed
+        setLoading(true);
+        console.log("LOGGING HISTORY")
+        let newHistory = await madRaffle.updateRaffleHistory();
+        if (isMounted) {  // check if component is still mounted
+          setHistory(newHistory);
+          setLoading(false);
         }
-        setHistory(newHistory);
-        setLoading(false);
       }
     };
+
     fetchHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sdkLoaded]);
+
+
+  useEffect(() => {
+    if (madRaffle && madRaffle.isReady() && !sdkLoaded) {
+      setSdkLoaded(true);
+    }
   }, [madRaffle]);
-  
 
 
 
@@ -50,7 +65,7 @@ export const HistoryView: FC = ({ }) => {
           Raffle History
         </h4>
         <div className="flex flex-col mt-2 text-2xl">
-          {loading ? <Spinner /> :
+          {loading ? <Spinner color='text-madlad-red' /> :
             <table className="table-auto border-collapse border border-gray-300 tracking-wide text-center">
               <thead>
                 <tr>
@@ -60,7 +75,7 @@ export const HistoryView: FC = ({ }) => {
                 </tr>
               </thead>
               <tbody>
-                {history.map((raffle) => (
+                {history && history.map((raffle) => (
                   <tr key={raffle.id}>
                     <td className="border border-gray-300 p-1">{raffle.id}</td>
                     <td className="border border-gray-300 p-1">{formatPublicKey(raffle.winner?.toString() || '')}</td>

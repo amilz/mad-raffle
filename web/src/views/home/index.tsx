@@ -87,7 +87,7 @@ export const HomeView: FC = ({ }) => {
 
         {!connected ?
           <div className='flex flex-col items-center justify-center'>
-            <p className='max-w-md text-2xl text-left md:mr-0 text-slate-400'>
+            <div className='max-w-md text-2xl text-left md:mr-0 text-slate-400'>
               Mad Raffle is a &quot;reverse&quot;, perpetual raffle.
               at any given time there&apos;s always 1 raffle open for any Mad Lad NFT.<br />
               <ul className="list-disc list-outside pl-6">
@@ -96,7 +96,7 @@ export const HomeView: FC = ({ }) => {
                 <li>At any point, anybody can sell a Mad Lad to the raffle to take the pot.</li>
                 <li>That ends the raffle. A winner is selected. Prize dropped. And next raffle starts.</li>
               </ul>
-            </p><br />
+            </div><br />
             <WalletMultiButtonDynamic
               className="px-8 m-2 min-w-button btn bg-madlad-red 
               hover:bg-madlad-red hover:text-black
@@ -107,7 +107,7 @@ export const HomeView: FC = ({ }) => {
           : <div>
             <h4 className="md:w-full text-2xl md:text-4xl text-center text-slate-300 my-2">
               {isLoading
-                ? <Spinner />
+                ? <Spinner color='text-madlad-red' />
                 : (
                   <>
                     {raffleDetails !== null && raffleDetails !== undefined &&

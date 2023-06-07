@@ -463,116 +463,44 @@ export class MadRaffleSDK {
             .remainingAccounts(remainingAccounts)
             .instruction();
     }
-    private getLocalRaffles(): LocalRaffle[] {
-        // Fetch existing raffles from localStorage
-        let localRaffles: LocalRaffle[] = [];
-        const storedRaffles = localStorage.getItem('localRaffles');
-        if (storedRaffles) {
-            const parsedRaffles = JSON.parse(storedRaffles);
-            if (Array.isArray(parsedRaffles) && parsedRaffles.every(raffle => this.isLocalRaffle(raffle))) {
-                localRaffles = parsedRaffles;
-            }
-        }
-        return localRaffles;
-    }
-    
-    public async *updateRaffleHistory(): AsyncGenerator<LocalRaffle> {
-        const currentRaffle = await this.getCurrentRaffleId();
-        console.log('currentRaffle', currentRaffle)
-    
-        let localRaffles: LocalRaffle[] = this.getLocalRaffles();
 
-        // If local storage is up to date, return
-        if (localRaffles.length >= currentRaffle - 1) return;
-    
-        for (let n = 1; n < currentRaffle; n++) {
-            // If the raffle already exists in local storage, skip
-            const thisRaffle = localRaffles.find(raffle => raffle.id === n);
-
-            if (thisRaffle) {
-                console.log('found raffle in local storage', n);
-                yield thisRaffle;
-                continue;
-            }
-            try {
-                // Fetch the raffle from the backend
-                let fetchedRaffle: Raffle = await this.getRaffleDetails({ raffleId: n });
-                let localRaffle = this.convertToLocalRaffle(fetchedRaffle);
-                yield localRaffle;
-                // If the raffle is claimed, add to local storage
-                if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {                            
-                    localRaffles.push(localRaffle);                            
-                    localStorage.setItem('localRaffles', JSON.stringify(localRaffles));
-                }
-            } catch (error) {
-                console.error(`Failed to fetch details for raffle ${n}:`, error);
-            }
-        }
-    }
-    
-/*     public async updateRaffleHistory(): Promise<LocalRaffle[]> {
+    public async updateRaffleHistory(): Promise<LocalRaffle[]> {
+        if (!this.program) return;
         const currentRaffle = await this.getCurrentRaffleId();
-        console.log('currentRaffle', currentRaffle)
         // Check if localStorage is available
         let allRaffles: LocalRaffle[] = [];
         if (typeof Storage !== "undefined") {
-            // Fetch existing raffles from localStorage
-            let localRaffles: LocalRaffle[] = [];
-            const storedRaffles = localStorage.getItem('localRaffles');
-            if (storedRaffles) {
-                const parsedRaffles = JSON.parse(storedRaffles);
-                if (Array.isArray(parsedRaffles) && parsedRaffles.every(raffle => this.isLocalRaffle(raffle))) {
-                    localRaffles = parsedRaffles;
-                }
-            }
-            console.log('localRaffles', localRaffles)
-            
+            const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles'));
+            const newLocalRaffles: LocalRaffle[] = [...existingLocalRaffles];
+
             for (let n = 1; n < currentRaffle; n++) {
-                // If the raffle already exists in local storage, skip
-                const thisRaffle = localRaffles.find(raffle => raffle.id === n);
+                let thisRaffle = existingLocalRaffles.find(raffle => Number(raffle.id) === Number(n));
                 if (thisRaffle) {
                     allRaffles.push(thisRaffle)
-                    console.log('found raffle in local storage', n);
                     continue;
                 }
-                console.log('shouldnt be here');
-                continue;
                 try {
                     // Fetch the raffle from the backend
                     let fetchedRaffle: Raffle = await this.getRaffleDetails({ raffleId: n });
                     let localRaffle = this.convertToLocalRaffle(fetchedRaffle);
                     allRaffles.push(localRaffle);
                     // If the raffle is claimed, add to local storage
-                    if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {                            
-                        localRaffles.push(localRaffle);                            
-                        localStorage.setItem('localRaffles', JSON.stringify(localRaffles));
+                    if (fetchedRaffle.prize && fetchedRaffle.prize.sent) {
+                        newLocalRaffles.push(localRaffle);
                     }
                 } catch (error) {
                     console.error(`Failed to fetch details for raffle ${n}:`, error);
                 }
             }
+            console.log("NEW LOCAL RAFFLES", newLocalRaffles);
+            localStorage.setItem('localRaffles', JSON.stringify(newLocalRaffles));            
         } else {
             console.warn("localStorage is not available");
         }
         return allRaffles;
-    } */
-
-    private isLocalRaffle(object: any): object is LocalRaffle {
-        return object &&
-            typeof object.id === 'number' &&
-            typeof object.version === 'number' &&
-            typeof object.bump === 'number' &&
-            typeof object.active === 'boolean' &&
-            typeof object.numTickets === 'number' &&
-            typeof object.startTime === 'number' &&
-            typeof object.endTime === 'number' &&
-            (!object.prizeNft || object.prizeNft instanceof PublicKey) && 
-            (!object.winner || object.winner instanceof PublicKey) && 
-            typeof object.claimed === 'boolean';
     }
-    
-    
-    private convertToLocalRaffle(fetchedRaffle: Raffle):LocalRaffle {
+
+    private convertToLocalRaffle(fetchedRaffle: Raffle): LocalRaffle {
         // Convert the fetched raffle into a LocalRaffle here...
         // The below is just a hypothetical example
         const numTickets = this.getTotalTickets(fetchedRaffle);
@@ -584,12 +512,12 @@ export class MadRaffleSDK {
             numTickets,
             startTime: fetchedRaffle.startTime,
             endTime: fetchedRaffle.endTime,
-            prizeNft: fetchedRaffle.prize.mint ?? null,
-            winner: fetchedRaffle.winner ?? null,
+            prizeNft: fetchedRaffle.prize.mint.toBase58() ?? null,
+            winner: fetchedRaffle.winner.toBase58() ?? null,
             claimed: fetchedRaffle.prize.sent ?? false,
         };
     }
-    
+
 
 
 }
@@ -667,8 +595,8 @@ export interface LocalRaffle {
     numTickets: number;
     startTime: number;
     endTime: number;
-    prizeNft: PublicKey;
-    winner: PublicKey;
+    prizeNft: string;
+    winner: string;
     claimed: boolean;
 }
 

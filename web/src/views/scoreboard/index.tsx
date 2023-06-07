@@ -71,7 +71,7 @@ export const ScoreboardView: FC = ({ }) => {
           Leaderboard
         </h4>
         <div className="flex flex-col mt-2 text-2xl">
-          {loading ? <Spinner /> :
+          {loading ? <Spinner color='text-madlad-red'/> :
             <table className="table-auto border-collapse border border-gray-300 tracking-wide text-center">
               <thead>
                 <tr>
