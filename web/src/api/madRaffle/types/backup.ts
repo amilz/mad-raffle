@@ -250,45 +250,6 @@ export type MadRaffle = {
       ]
     },
     {
-      "name": "pickWinner",
-      "accounts": [
-        {
-          "name": "raffle",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "random",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Unchecked random address using Keypair.generate().pubkey()"
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "priceFeed",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "raffleId",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "distributePrize",
       "accounts": [
         {
@@ -621,50 +582,6 @@ export type MadRaffle = {
       }
     },
     {
-      "name": "RaffleError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NotActive"
-          },
-          {
-            "name": "StillActive"
-          },
-          {
-            "name": "InvalidVault"
-          },
-          {
-            "name": "RaffleClosed"
-          },
-          {
-            "name": "MaxTicketsPerUserExceeded"
-          },
-          {
-            "name": "RaffleAlreadyActive"
-          },
-          {
-            "name": "NoTickets"
-          },
-          {
-            "name": "NoWinner"
-          },
-          {
-            "name": "UnauthorizedSigner"
-          },
-          {
-            "name": "WinnerAlreadySelected"
-          },
-          {
-            "name": "WinnerNotSelected"
-          },
-          {
-            "name": "RafflePdaMismatch"
-          }
-        ]
-      }
-    },
-    {
       "name": "PnftError",
       "type": {
         "kind": "enum",
@@ -744,8 +661,63 @@ export type MadRaffle = {
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidPriceFeed",
-      "msg": "Invalid Price Feed"
+      "name": "NotActive",
+      "msg": "Selected raffle is not active"
+    },
+    {
+      "code": 6001,
+      "name": "StillActive",
+      "msg": "Selected raffle is still active"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidVault",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6003,
+      "name": "RaffleClosed",
+      "msg": "Raffle has already closed"
+    },
+    {
+      "code": 6004,
+      "name": "MaxTicketsPerUserExceeded",
+      "msg": "Max tickets per user exceeded"
+    },
+    {
+      "code": 6005,
+      "name": "RaffleAlreadyActive",
+      "msg": "Raffle is already active"
+    },
+    {
+      "code": 6006,
+      "name": "NoTickets",
+      "msg": "No Raffle Tickets Sold"
+    },
+    {
+      "code": 6007,
+      "name": "NoWinner",
+      "msg": "Error Selecting Winner"
+    },
+    {
+      "code": 6008,
+      "name": "UnauthorizedSigner",
+      "msg": "UNAUTHORIZED"
+    },
+    {
+      "code": 6009,
+      "name": "WinnerAlreadySelected",
+      "msg": "Winner already selected"
+    },
+    {
+      "code": 6010,
+      "name": "WinnerNotSelected",
+      "msg": "Winner not yet selected"
+    },
+    {
+      "code": 6011,
+      "name": "RafflePdaMismatch",
+      "msg": "Raffle PDA does not match ID"
     }
   ]
 };
@@ -1000,45 +972,6 @@ export const IDL: MadRaffle = {
       ]
     },
     {
-      "name": "pickWinner",
-      "accounts": [
-        {
-          "name": "raffle",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "random",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Unchecked random address using Keypair.generate().pubkey()"
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "priceFeed",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "raffleId",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "distributePrize",
       "accounts": [
         {
@@ -1371,50 +1304,6 @@ export const IDL: MadRaffle = {
       }
     },
     {
-      "name": "RaffleError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NotActive"
-          },
-          {
-            "name": "StillActive"
-          },
-          {
-            "name": "InvalidVault"
-          },
-          {
-            "name": "RaffleClosed"
-          },
-          {
-            "name": "MaxTicketsPerUserExceeded"
-          },
-          {
-            "name": "RaffleAlreadyActive"
-          },
-          {
-            "name": "NoTickets"
-          },
-          {
-            "name": "NoWinner"
-          },
-          {
-            "name": "UnauthorizedSigner"
-          },
-          {
-            "name": "WinnerAlreadySelected"
-          },
-          {
-            "name": "WinnerNotSelected"
-          },
-          {
-            "name": "RafflePdaMismatch"
-          }
-        ]
-      }
-    },
-    {
       "name": "PnftError",
       "type": {
         "kind": "enum",
@@ -1494,12 +1383,66 @@ export const IDL: MadRaffle = {
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidPriceFeed",
-      "msg": "Invalid Price Feed"
+      "name": "NotActive",
+      "msg": "Selected raffle is not active"
+    },
+    {
+      "code": 6001,
+      "name": "StillActive",
+      "msg": "Selected raffle is still active"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidVault",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6003,
+      "name": "RaffleClosed",
+      "msg": "Raffle has already closed"
+    },
+    {
+      "code": 6004,
+      "name": "MaxTicketsPerUserExceeded",
+      "msg": "Max tickets per user exceeded"
+    },
+    {
+      "code": 6005,
+      "name": "RaffleAlreadyActive",
+      "msg": "Raffle is already active"
+    },
+    {
+      "code": 6006,
+      "name": "NoTickets",
+      "msg": "No Raffle Tickets Sold"
+    },
+    {
+      "code": 6007,
+      "name": "NoWinner",
+      "msg": "Error Selecting Winner"
+    },
+    {
+      "code": 6008,
+      "name": "UnauthorizedSigner",
+      "msg": "UNAUTHORIZED"
+    },
+    {
+      "code": 6009,
+      "name": "WinnerAlreadySelected",
+      "msg": "Winner already selected"
+    },
+    {
+      "code": 6010,
+      "name": "WinnerNotSelected",
+      "msg": "Winner not yet selected"
+    },
+    {
+      "code": 6011,
+      "name": "RafflePdaMismatch",
+      "msg": "Raffle PDA does not match ID"
     }
   ]
 };
-
 
 export interface ScoreboardEntry {
   user: PublicKey;

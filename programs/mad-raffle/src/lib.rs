@@ -34,6 +34,10 @@ pub mod mad_raffle {
         instructions::select_winner(ctx)
     }
 
+    pub fn pick_winner(ctx: Context<PickWinner>, _raffle_id: u64) -> Result<()> {
+        instructions::pick_winner(ctx)
+    }
+
     pub fn distribute_prize<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, DistributePrize<'info>>,
         raffle_id: u64,

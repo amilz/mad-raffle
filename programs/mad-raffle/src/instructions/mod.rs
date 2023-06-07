@@ -12,3 +12,6 @@ pub use select_winner::*;
 
 pub mod distribute_prize;
 pub use distribute_prize::*;
+
+pub mod pick_winner;
+pub use pick_winner::*;

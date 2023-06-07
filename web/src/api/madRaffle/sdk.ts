@@ -363,10 +363,11 @@ export class MadRaffleSDK {
         const { pda: raffle } = await this.getRafflePda({ raffleId });
         const random = Keypair.generate().publicKey;
         const authority = AUTH_PUBKEY;
-        const accounts = { raffle, authority, random };
+        const priceFeed = new PublicKey('J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix');
+        const accounts = { raffle, authority, random, priceFeed };
 
         return await this.program.methods
-            .selectWinner(currentRaffle)
+            .pickWinner(currentRaffle)
             .accounts(accounts)
             .instruction();
     }
