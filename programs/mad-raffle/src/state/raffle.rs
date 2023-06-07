@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_program::{pubkey::Pubkey};
-use crate::utils::select_winner;
+use crate::utils::{select_winner, pick_winner};
 
 #[account]
 pub struct Raffle {
@@ -86,6 +86,20 @@ impl Raffle {
                 msg!("Error selecting winner: {:?}", e);
             }
         }
+    }
+    pub fn pick_winner(&mut self, random: Pubkey, randomness: i64) {
+        match pick_winner(self, random, randomness) {
+            Ok(winner) => {
+                self.winner = Some(winner);
+                msg!("The winner is {:?}", self.winner);
+            }
+            Err(e) => {
+                msg!("Error selecting winner: {:?}", e);
+            }
+        }
+    }
+    pub fn get_ticket_count(&self) -> u32 {
+        self.tickets.iter().map(|holder| holder.qty as u32).sum()
     }
     
 }

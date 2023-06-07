@@ -22,5 +22,6 @@ mpl-token-auth-rules = "1.0.0"
 anchor-spl ={version = "0.27.0", features = ["metadata"]}
 thiserror = "1.0.30"
 solana-program = "1.14.17"
+pyth-sdk-solana = "0.7.2"
 # https://github.com/solana-labs/solana/issues/31428#issuecomment-1536509749
 winnow = "=0.4.1"
