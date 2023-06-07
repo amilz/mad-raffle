@@ -104,6 +104,7 @@ export const SellNft: FC<SellNftProps> = ({ solPriceString, onSuccess, onClickBu
   }, [selectedNft]);
 
   const onShowNfts = useCallback(() => {
+    if (noLads) return;
     onClickButton();
     setSelectingNft(true);
     return;
@@ -113,10 +114,11 @@ export const SellNft: FC<SellNftProps> = ({ solPriceString, onSuccess, onClickBu
     setSelectingNft(false);
   }, [restart]);
 
-  const buttonText = nfts.length <= 0 ? `No Focking Lads` : !selectingNft ? `Sell a Lad ◎${solPriceString}` : `Sell Now ◎${solPriceString}`;
+  const noLads = nfts.length <= 0;
+  const buttonText = noLads ? `No Focking Lads` : !selectingNft ? `Sell a Lad ◎${solPriceString}` : `Sell Now ◎${solPriceString}`;
   return (
     <div>
-      {!selectingNft && <Button text={buttonText} onClick={onShowNfts} loading={false} disabled={nfts.length <= 0} />}
+      {!selectingNft && <Button text={buttonText} onClick={onShowNfts} loading={false} disabled={noLads} />}
       <div className="flex flex-wrap justify-center">
         {selectingNft && nfts && nfts.map(nft =>
           <div
