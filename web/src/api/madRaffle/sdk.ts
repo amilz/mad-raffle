@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Keypair, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { AUTH_PROGRAM_ID, COLLECTION_PUBKEY, TOKEN_METADATA_PROGRAM, VAULT_PUBKEY, AUTH_PUBKEY } from "./constants/keys";
+import { AUTH_PROGRAM_ID, COLLECTION_PUBKEY, TOKEN_METADATA_PROGRAM, VAULT_PUBKEY, AUTH_PUBKEY, PRICE_FEED } from "./constants/keys";
 import { raffleNumberBuffer, RAFFLE_SEED, SUPER_RAFFLE_SEED, TRACKER_SEED } from "./constants/seeds";
 import { ApiError, SolanaQueryType } from "./error";
 import { MadRaffle, Raffle, ScoreboardEntry } from "./types/types";
@@ -332,7 +332,7 @@ export class MadRaffleSDK {
         }
         const METAPLEX = new Metaplex(this.program.provider.connection);
         const allNFTs: FindNftsByUpdateAuthorityOutput = await METAPLEX.nfts().findAllByOwner({ owner: this.program.provider.publicKey });
-        const collectionNFTs = allNFTs.filter(nft => nft.collection && nft.collection.address.toBase58() == COLLECTION_PUBKEY.toBase58());
+        const collectionNFTs = allNFTs.filter(nft => nft.collection && nft.collection.address.toBase58() == COLLECTION_PUBKEY.toBase58() && nft.collection.verified);
         const loadedNFTs = await Promise.all(collectionNFTs.map(async nft => {
             if ('jsonLoaded' in nft && !nft.jsonLoaded) {
                 //@ts-ignore
@@ -363,7 +363,7 @@ export class MadRaffleSDK {
         const { pda: raffle } = await this.getRafflePda({ raffleId });
         const random = Keypair.generate().publicKey;
         const authority = AUTH_PUBKEY;
-        const priceFeed = new PublicKey('J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix');
+        const priceFeed = PRICE_FEED;
         const accounts = { raffle, authority, random, priceFeed };
 
         return await this.program.methods
@@ -471,7 +471,7 @@ export class MadRaffleSDK {
         // Check if localStorage is available
         let allRaffles: LocalRaffle[] = [];
         if (typeof Storage !== "undefined") {
-            const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles'));
+            const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles')) || [];
             const newLocalRaffles: LocalRaffle[] = [...existingLocalRaffles];
             for (let n = 1; n < currentRaffle; n++) {
                 let thisRaffle = existingLocalRaffles.find(raffle => Number(raffle.id) === Number(n));

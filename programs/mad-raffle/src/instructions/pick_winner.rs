@@ -3,13 +3,9 @@ use std::str::FromStr;
 use anchor_lang::{prelude::*, system_program};
 use pyth_sdk_solana::{load_price_feed_from_account_info};
 
-use crate::model::RaffleError;
+use crate::model::{RaffleError, FeedError};
 use crate::state::{Raffle};
-use crate::constants::{RAFFLE_SEED, AUTHORITY};
-
-// TODO(amilz) - move this to a config file & update to prod address
-const SOL_PRICE_FEED: &str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix";
-const STALENESS_THRESHOLD: u64 = 1; // staleness threshold in seconds
+use crate::constants::{RAFFLE_SEED, AUTHORITY, SOL_PRICE_FEED, STALENESS_THRESHOLD};
 
 #[derive(Accounts)]
 #[instruction(raffle_id: u64)]
@@ -55,10 +51,4 @@ pub fn pick_winner(ctx: Context<PickWinner>) -> Result<()> {
     let current_price = price_feed.get_price_no_older_than(current_timestamp, STALENESS_THRESHOLD).unwrap();
     raffle.pick_winner(random.key(), current_price.price);
     Ok(())
-}
-
-#[error_code]
-pub enum FeedError {
-    #[msg("Invalid Price Feed")]
-    InvalidPriceFeed,
 }

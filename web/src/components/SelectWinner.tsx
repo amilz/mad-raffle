@@ -36,7 +36,6 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleI
         setLoading(true);
         try {
             const transaction = new Transaction;
-            //TODO add form for ticket number
             const ix = await madRaffle.createSelectWinnerInstruction(ticketNumber);
             if (!ix) { ApiError.solanaTxError(SolanaTxType.FAILED_TO_GENERATE_IX) }
 
@@ -68,7 +67,6 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleI
         setLoading(true);
         try {
             const transaction = new Transaction;
-            //TODO add form for ticket number
             const ix = await madRaffle.createDistributePrizeInstruction(ticketNumber);
             if (!ix) { ApiError.solanaTxError(SolanaTxType.FAILED_TO_GENERATE_IX) }
 

@@ -2,12 +2,11 @@
 pub const NATIVE_MINT: &str = "So11111111111111111111111111111111111111112";
 
 /// Fee Vault 
-/// TODO Update for production
-pub const FEE_VAULT: &str = "VLTJe32UcmbUpeKwsgp5734hWY6jhXnw7Nh7kvY72T6";
+pub const FEE_VAULT: &str = "68zZq8P3An1z98askGjUeUPijnaHpvnYcZNVeiM2pTrz";
 
 /// This is the authority to initiatialize stuff.
-/// TODO Update for production
-pub const AUTHORITY: &str = "AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy";
+pub const AUTHORITY: &str = "AUTHtStYmZz7G8KQz6R6FmussLgPrybNhHx4EZzQwFBF";
+// (DEV: AuthtWB95Cf3KaHh2gTsQLfKNtsGMgFg9BxgqbHjeLVy)
 
 /// The current version of the Raffle account.
 const _RENT_ADDITION: u64 = 1_120_560; // amount for + rent of 33 bytes
@@ -34,6 +33,9 @@ pub const POINTS_PER_TICKET: u32 = 1;
 pub const POINTS_FOR_SELLING: u32 = 10;
 
 /// Collection Address
-pub const COLLECTION_ADDRESS: &str = "CLxN2mQsewGLsTKw3gML1AWFQjrWpG6WgLYTLX9BdhRp";
-// TODO FOR PROD
-// pub const COLLECTION_ADDRESS: &str = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w";
+pub const COLLECTION_ADDRESS: &str = "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w";
+// pub const COLLECTION_ADDRESS: &str = "CLxN2mQsewGLsTKw3gML1AWFQjrWpG6WgLYTLX9BdhRp"(dev) "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w"(prod);
+
+/// Price Feeds
+pub const SOL_PRICE_FEED: &str = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG";
+pub const STALENESS_THRESHOLD: u64 = 1; // staleness threshold in seconds
