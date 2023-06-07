@@ -87,16 +87,17 @@ export const HomeView: FC = ({ }) => {
 
         {!connected ?
           <div className='flex flex-col items-center justify-center'>
-            <div className='max-w-md text-2xl text-left md:mr-0 text-slate-400'>
-              Mad Raffle is a &quot;reverse&quot;, perpetual raffle.
-              at any given time there&apos;s always 1 raffle open for any Mad Lad NFT.<br />
-              <ul className="list-disc list-outside pl-6">
-                <li>Ticket costs ◎0.69.</li>
-                <li>The raffle pot grows each time somebody buys a ticket.</li>
-                <li>At any point, anybody can sell a Mad Lad to the raffle to take the pot.</li>
-                <li>That ends the raffle. A winner is selected. Prize dropped. And next raffle starts.</li>
-              </ul>
-            </div><br />
+<div className='max-w-md text-2xl text-left md:mr-0 text-slate-400 mx-4 sm:mx-0'>
+Welcome to Mad Raffle - the endless Mad Lad NFT game!<br />
+  <ul className="list-disc list-outside pl-6">
+    <li>Enter the current raffle for just 0.69 SOL</li>
+    <li>Each ticket sold increases the pot</li>
+    <li>Sell your Lad, claim the pot</li>
+    <li>When you sell, the raffle ends, prize drops</li>
+    <li>New raffle begins instantly!</li>
+  </ul>
+</div><br />
+
             <WalletMultiButtonDynamic
               className="px-8 m-2 min-w-button btn bg-madlad-red 
               hover:bg-madlad-red hover:text-black

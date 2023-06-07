@@ -39,8 +39,8 @@ export const AppBar: FC = () => {
   </div>
 
   {/* Right nav section (WalletConnect) */}
-  <div className="flex justify-end w-1/4 md:w-1/6">
-    {connected && <Image src={CloseImageRed} className="mr-6" alt={'close'} onClick={disconnect} width={25} height={25}/>}
+  <div className="flex justify-end w-1/4 md:w-1/6 ">
+    {connected && <Image src={CloseImageRed} className="mr-6 cursor-pointer" alt={'close'} onClick={disconnect} width={25} height={25}/>}
   </div>
 </div>
   );

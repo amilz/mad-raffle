@@ -6,7 +6,6 @@ import { useMadRaffle } from 'api/madRaffle/useMadRaffle';
 import { SimpleNFT } from 'api/madRaffle/sdk';
 import { ComputeBudgetProgram, Transaction, TransactionSignature } from '@solana/web3.js';
 import { ApiError, SolanaTxType } from 'api/madRaffle/error';
-import Image from 'next/image';
 
 
 interface NFTComponentProps {
