@@ -95,6 +95,7 @@ Welcome to Mad Raffle - the endless Mad Lad NFT game!<br />
     <li>Sell your Lad, claim the pot</li>
     <li>When you sell, the raffle ends, prize drops</li>
     <li>New raffle begins instantly!</li>
+    <li>Earn points: buy, sell, or be early! 👀</li>
   </ul>
 </div><br />
 

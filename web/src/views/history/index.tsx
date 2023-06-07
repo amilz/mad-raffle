@@ -64,7 +64,7 @@ export const HistoryView: FC = ({ }) => {
         <h4 className="md:w-full text-2xl md:text-4xl text-center text-slate-300 my-2">
           Raffle History
         </h4>
-        <div className="flex flex-col mt-2 text-2xl">
+        <div className="flex flex-col mt-2 text-2xl  w-full">
           {loading ? <Spinner color='text-madlad-red' /> :
             <table className="table-auto border-collapse border border-gray-300 tracking-wide text-center">
               <thead>
