@@ -1,12 +1,6 @@
 import { useEffect } from 'react'
-import {
-  CheckCircleIcon,
-  InformationCircleIcon,
-  XCircleIcon,
-} from '@heroicons/react/outline'
 import { XIcon } from '@heroicons/react/solid'
 import useNotificationStore from '../stores/useNotificationStore'
-import { useConnection } from '@solana/wallet-adapter-react';
 import { useNetworkConfiguration } from 'contexts/NetworkConfigurationProvider';
 
 const NotificationList = () => {
@@ -15,7 +9,7 @@ const NotificationList = () => {
 
   return (
     <div
-      className={`z-20 fixed inset-20 flex items-end px-4 py-6 pointer-events-none sm:p-6`}
+      className={`z-20 fixed bottom-0 left-0 flex items-end px-2 py-2 pointer-events-none `}
     >
       <div className={`flex flex-col w-full`}>
         {reversedNotifications.map((n, idx) => (
@@ -56,23 +50,14 @@ const Notification = ({ type, message, description, txid, onHide }) => {
 
   return (
     <div
-      className={`max-w-sm w-full bg-bkg-1 shadow-lg rounded-md mt-2 pointer-events-auto ring-1 ring-black ring-opacity-5 p-2 mx-4 mb-12 overflow-hidden`}
+    className={` max-w-[calc(100%-1rem)] w-full bg-bkg-1 shadow-lg rounded-md mt-2 pointer-events-auto ring-1 ring-black ring-opacity-5 p-2 ml-2 mr-4 overflow-hidden`}
     >
-      <div className={`p-4 rounded-md bg-gradient-to-r from-red-700 to-red-500`}>
+      <div className={`p-4 rounded-md bg-madlad-red`}>
         <div className={`flex items-center`}>
-          <div className={`flex-shrink-0`}>
-            {type === 'success' ? (
-              <CheckCircleIcon className={`h-8 w-8 mr-1 text-green`} />
-            ) : null}
-            {type === 'info' && <InformationCircleIcon className={`h-8 w-8 mr-1 text-red`} />}
-            {type === 'error' && (
-              <XCircleIcon className={`h-8 w-8 mr-1`} />
-            )}
-          </div>
-          <div className={`ml-1 w-0 flex-1`}>
-            <div className={`font-bold text-2xl tracking-wide text-fgd-1`}>{message}</div>
+          <div className={`ml-1   flex-1`}>
+            <div className={`text-xl tracking-wide leading-5 text-fgd-1`}>{message}</div>
             {description ? (
-              <p className={`text-2xl tracking-wide text-fgd-2`}>{description}</p>
+              <p className={`text-xl tracking-wide text-fgd-2`}>{description}</p>
             ) : null}
             {txid ? (
               <div className="flex flex-row">

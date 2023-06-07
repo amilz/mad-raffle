@@ -472,7 +472,6 @@ export class MadRaffleSDK {
         if (typeof Storage !== "undefined") {
             const existingLocalRaffles: LocalRaffle[] = JSON.parse(localStorage.getItem('localRaffles'));
             const newLocalRaffles: LocalRaffle[] = [...existingLocalRaffles];
-
             for (let n = 1; n < currentRaffle; n++) {
                 let thisRaffle = existingLocalRaffles.find(raffle => Number(raffle.id) === Number(n));
                 if (thisRaffle) {
@@ -492,7 +491,6 @@ export class MadRaffleSDK {
                     console.error(`Failed to fetch details for raffle ${n}:`, error);
                 }
             }
-            console.log("NEW LOCAL RAFFLES", newLocalRaffles);
             localStorage.setItem('localRaffles', JSON.stringify(newLocalRaffles));            
         } else {
             console.warn("localStorage is not available");
@@ -512,8 +510,8 @@ export class MadRaffleSDK {
             numTickets,
             startTime: fetchedRaffle.startTime,
             endTime: fetchedRaffle.endTime,
-            prizeNft: fetchedRaffle.prize.mint.toBase58() ?? null,
-            winner: fetchedRaffle.winner.toBase58() ?? null,
+            prizeNft: fetchedRaffle.prize.mint ? fetchedRaffle.prize.mint?.toBase58() : null,
+            winner: fetchedRaffle.winner ? fetchedRaffle.winner?.toBase58() : null,
             claimed: fetchedRaffle.prize.sent ?? false,
         };
     }

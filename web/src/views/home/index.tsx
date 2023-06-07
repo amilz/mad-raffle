@@ -107,7 +107,11 @@ export const HomeView: FC = ({ }) => {
           : <div>
             <h4 className="md:w-full text-2xl md:text-4xl text-center text-slate-300 my-2">
               {isLoading
-                ? <Spinner color='text-madlad-red' />
+                ? (
+                  <div className="flex justify-center items-center">
+                    <Spinner color='text-madlad-red' />
+                  </div>
+                )
                 : (
                   <>
                     {raffleDetails !== null && raffleDetails !== undefined &&
@@ -117,7 +121,7 @@ export const HomeView: FC = ({ }) => {
                     {raffleDetails !== null && raffleDetails !== undefined &&
                       <p>Current Pot: ◎{solPriceString}</p>}
                     {!showBuyTicketButton &&
-                      <p className='font-bold'>Select Lad to Sell: <span onClick={()=>onCancelSell()} className='text-base text-madlad-red'>(cancel)</span></p>}
+                      <p className='font-bold'>Select Lad to Sell: <span onClick={() => onCancelSell()} className='text-base text-madlad-red'>(cancel)</span></p>}
                   </>
                 )
               }
@@ -125,8 +129,8 @@ export const HomeView: FC = ({ }) => {
             </h4>
 
             <div className="flex flex-col mt-2">
-              {showBuyTicketButton && <BuyTicket 
-                onSuccess={onBuySuccess} 
+              {showBuyTicketButton && <BuyTicket
+                onSuccess={onBuySuccess}
                 onClickButton={() => setBuyingTicket(true)}
                 onError={onBuyError}
               />}
@@ -134,7 +138,7 @@ export const HomeView: FC = ({ }) => {
                 solPriceString={solPriceString}
                 onSuccess={onSellSuccess}
                 onClickButton={() => setShowBuyTicketButton(false)}
-                restart = {restart}
+                restart={restart}
                 onError={onCancelSell}
               />}
               {wallet && wallet.publicKey && wallet.publicKey.toBase58() === AUTH_PUBKEY.toBase58() &&

@@ -6,6 +6,16 @@ export function notify(newNotification: {
   description?: string
   txid?: string
 }) {
+  if (newNotification.message === "WalletSendTransactionError: User rejected the request.") {
+    return; 
+  }
+  if (newNotification.message && newNotification.message.toLowerCase().includes("rejected the request".toLowerCase())) {
+    return; 
+  }
+  if (newNotification.description && newNotification.description.toLowerCase().includes("rejected the request".toLowerCase())) {
+    return; 
+  }
+  
   const {
     notifications,
     set: setNotificationStore,

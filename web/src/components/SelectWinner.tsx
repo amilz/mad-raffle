@@ -17,7 +17,7 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleI
     const { publicKey: admin, signTransaction, sendTransaction } = useWallet();
     const { madRaffle } = useMadRaffle();
     const [loading, setLoading] = useState(false);
-    const [ticketNumber, setTicketNumber] = useState((startingRaffleId - 1) ?? 0);
+    const [ticketNumber, setTicketNumber] = useState(10);
     madRaffle.getCurrentRaffleId
 
     const onChangeNumber = useCallback((change: ChangeNumber) => {
@@ -54,15 +54,15 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleI
             notify({ type: 'Focking Mad!', message: 'Winner Selected!', txid: signature });
             onWinner();
         } catch (error: any) {
-            notify({ type: 'Fock!', message: `Buy Ticket Failed!`, description: error?.message });
+            notify({ type: 'Fock!', message: `Fock! Select Winner Failed!`, description: error?.message });
         } finally {
             setLoading(false);
         }
-    }, [admin, connection, madRaffle, signTransaction, sendTransaction]);
+    }, [admin, connection, madRaffle, signTransaction, sendTransaction, ticketNumber]);
 
     const onWinner = useCallback(async () => {
         if (!admin) {
-            notify({ type: 'error', message: 'error', description: 'Wallet not connected!' });
+            notify({ type: 'error', message: 'Fock! Not Authorized', description: 'Wallet not connected!' });
             return;
         }
         setLoading(true);
@@ -89,11 +89,11 @@ export const SelectWinner: FC<SelectWinnerProps> = ({ onSuccess, startingRaffleI
 
         } catch (error: any) {
             console.error(error);
-            notify({ type: 'Fock!', message: `Buy Ticket Failed!`, description: error?.message });
+            notify({ type: 'Fock!', message: `Fock: Prize Failed to Send!`, description: error?.message });
         } finally {
             setLoading(false);
         }
-    }, [admin, connection, madRaffle, signTransaction, sendTransaction]);
+    }, [admin, connection, madRaffle, signTransaction, sendTransaction, ticketNumber]);
 
     return (
         <div>
