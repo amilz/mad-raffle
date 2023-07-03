@@ -6,13 +6,13 @@ const Basics: NextPage = (props) => {
   return (
     <div>
       <Head>
-        <title>Mad Raffle</title>
+      <title>Raffle unaffiliated with Mad Lads</title>
         <meta
-          name="Mad Raffle Raffle History"
-          content="Mad Raffle is a decentralized raffle platform built on Solana for the Mad Lads NFT community."
+          name="Raffle unaffiliated with Mad Lads"
+          content="Raffle unaffiliated with Mad Lads is a decentralized raffle platform built on Solana for the Mad Lads NFT community."
         />
       </Head>
-      <HistoryView />
+     {/*  <HistoryView /> */}
     </div>
   );
 };
