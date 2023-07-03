@@ -7,6 +7,7 @@ import { MadRaffle, Raffle, ScoreboardEntry } from "./types/types";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { FindNftsByUpdateAuthorityOutput, JsonMetadata, Metaplex } from "@metaplex-foundation/js";
 import { Creator, Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { CONFIG, config } from "./constants/config";
 
 export class MadRaffleSDK {
     private readonly program: anchor.Program<MadRaffle> | undefined;
@@ -370,7 +371,12 @@ export class MadRaffleSDK {
         // @ts-ignore
         const allNFTs: FindNftsByUpdateAuthorityOutput = await METAPLEX.nfts().
         findAllByOwner({ owner: this.program?.provider.publicKey as PublicKey });
-        const collectionNFTs = allNFTs.filter(nft => nft.collection && nft.collection.address.toBase58() == COLLECTION_PUBKEY.toBase58() && nft.collection.verified);
+        const collectionNFTs = allNFTs.filter(nft => 
+            nft.collection && 
+            nft.collection.address.toBase58() == COLLECTION_PUBKEY.toBase58() && 
+            (config !== CONFIG.PROD || nft.collection.verified)
+        );
+        
         const loadedNFTs = await Promise.all(collectionNFTs.map(async nft => {
             if ('jsonLoaded' in nft && !nft.jsonLoaded) {
                 //@ts-ignore

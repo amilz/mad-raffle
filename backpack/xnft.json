@@ -1,0 +1,27 @@
+{
+  "name": "Mad Raffle",
+  "version": "1.0.4",
+  "description": "Mad Raffle - the endless Mad Lad NFT game! Buy tickets, Sell Lads, Win Lads, Earn points! ",
+  "website": "https://madraffle.xyz/",
+  "kind": "app",
+  "tag": "game",
+  "programIds" : ["MAD67ypEX8PR92g45gP8jtRhg8NNQhdAd4yLkh2BKmD"],
+  "icon": {
+    "sm": "./assets/icons/tix32.png",
+    "md": "./assets/icons/tix192.png",
+    "lg": "./assets/tixlg.png"
+  },
+  "contact": {
+    "repository": "https://github.com/amilz"
+  },
+  "screenshots": [
+    "./assets/screens/1homeAlt.png",
+    "./assets/screens/2buyAlt.png",
+    "./assets/screens/3sellAlt.png"
+  ],
+  "entrypoints": {
+    "default": {
+      "web": "./web-build/index.html"
+    }
+  }
+}

@@ -47,18 +47,18 @@ function SellScreen({
 
 
       //@ts-ignore
-      const signature: TransactionSignature = await window.xnft.send(transaction);
-      const results = await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'confirmed');
+      await window.xnft.solana.sendAndConfirm(transaction, null, { commitment: 'finalized' });
+      /*       const results = await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'confirmed');
       if (results.value.err) {
         ApiError.solanaTxError(SolanaTxType.FAILED_TO_CONFIRM);
-      }
+      } */
       onComplete(TxType.SellNFT);
       showSuccessAnimation(); // show the success animation
 
     } catch (err) {
       console.log(err);
       showErrorAnimation(); // show the error animation
-    } 
+    }
 
   }, [madRaffle, selectedNft, player, connection, onComplete
   ]);
@@ -158,7 +158,7 @@ function SellScreen({
             </View></View>
           );
         })}
-        <View style={{ margin: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        {playerNfts.length > 3 && <View style={{ margin: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           {/* Prev Page Button */}
           {currentPage === 0 ? <></> : <Button
             style={{ background: 'none', border: 'none' }}
@@ -170,7 +170,7 @@ function SellScreen({
             onClick={handleNext}
           ><MaterialCommunityIcons name="chevron-right" color={'#E61A3E'} size={40} />
           </Button>}
-        </View>
+        </View>}
       </View>
 
     </Screen>
