@@ -1,4 +1,4 @@
-import { Transaction, TransactionSignature } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionSignature } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Button } from "react-xnft";
@@ -45,7 +45,7 @@ function RaffleScreenComponent({
             const ix = await madRaffle.createBuyTicketInstruction();
             if (!ix) { ApiError.solanaTxError(SolanaTxType.FAILED_TO_GENERATE_IX) }
             let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-
+            console.log(player?.toBase58())
             transaction.add(ix);
             transaction.recentBlockhash = blockhash;
             transaction.lastValidBlockHeight = lastValidBlockHeight;
@@ -53,12 +53,12 @@ function RaffleScreenComponent({
 
             console.log("Sending transaction...")
             //@ts-ignore
-            const signature: TransactionSignature = await window.xnft.solana.send(transaction);
+           await window.xnft.solana.sendAndConfirm(transaction, null, {commitment: 'finalized'});
             console.log("Transaction sent!")
-            const results = await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'finalized');
-            if (results.value.err) {
-                ApiError.solanaTxError(SolanaTxType.FAILED_TO_CONFIRM);
-            }
+            /*             const results = await connection.confirmTransaction({ signature, lastValidBlockHeight, blockhash }, 'finalized');
+                        if (results.value.err) {
+                            ApiError.solanaTxError(SolanaTxType.FAILED_TO_CONFIRM);
+                        } */
             onComplete(TxType.BuyTicket);
             showSuccessAnimation(); // show the success animation
         } catch (err) {

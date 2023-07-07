@@ -92,7 +92,7 @@ export function SellScreen() {
       style={tw`bg-black mt-10`}
     >
       <Image
-        source={require("../../assets/mad.png")}
+        source={require("../../assets/tixsm.png")}
         style={{ width: 220, height: 220, alignSelf: 'center' }}
       />
       <br />

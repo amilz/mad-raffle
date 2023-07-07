@@ -54,7 +54,7 @@ export function HistoryScreen() {
     return (
         <Screen style={tw`bg-black mt-10`}>
             <Image
-                source={require("../../assets/mad.png")}
+                source={require("../../assets/tixsm.png")}
                 style={{ width: 220, height: 220, alignSelf: 'center' }}
             />
             <Text style={tw`px-4 font-bold text-white self-center text-xl mt-4`}>
